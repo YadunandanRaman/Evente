@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evente - Student Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=optional" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+        font-family: 'Inter', sans-serif;
+        background-color: #4158D0;
+        background-image: linear-gradient(43deg, #4158D0 0%, #C850C0 46%, #FFCC70 100%);
+        background-attachment: fixed;
+        min-height: 100vh;
+        }
+        .event-card {
+            transition: all 0.3s ease;
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .event-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(196, 80, 192, 0.5);  
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(196, 80, 192, 0.7);
+        }
+        .profile-dropdown {
+            display: none;
+            position: absolute;
+            top: calc(100% + 0.25rem);
+            right: 0;
+            width: 12rem;
+            background-color: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(12px);
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            z-index: 50;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        #studentAvatar:hover + .profile-dropdown,
+        .profile-dropdown:hover {
+            display: block;
+        }
+        .welcome-card {
+            background: rgba(65, 88, 208, 0.3);  
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        .nav-blur {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .modal-content {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .btn-primary {
+            background-color: #C850C0;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #b745af;
+        }
+        .text-accent {
+            color: #4158D0;
+        }
+        .ring-accent {
+            --tw-ring-color: #C850C0;
+        }
+        
+        input:focus {
+            box-shadow: 0 0 0 2px rgba(200, 80, 192, 0.2);
+        }
+        body {
+        font-family: 'Inter', sans-serif;
+        background-color: #4158D0;
+        background-image: linear-gradient(43deg, #4158D0 0%, #C850C0 46%, #FFCC70 100%);
+        background-attachment: fixed;
+        min-height: 100vh;
+    }
+
+    /* Updated welcome card styles */
+    .welcome-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    
+    .welcome-card h1 {
+        color: rgb(79 70 229);  /* Using the primary gradient color */
+    }
+    
+    .welcome-card p {
+        color: #666;
+    }
+    
+    .welcome-card .stat-box {
+        background:rgb(79 70 229);
+        color: white;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        backdrop-filter: blur(8px);
+    }
+    
+    .welcome-card .stat-label {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.875rem;
+    }
+    
+    .welcome-card .stat-value {
+        color: white;
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+    .toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        color: white;
+        z-index: 100;
+        transform: translateY(-100px);
+        transition: transform 0.3s ease;
+    }
+    .toast.success {
+        background-color: #10b981;
+    }
+    .toast.error {
+        background-color: #ef4444;
+    }
+    .toast.show {
+        transform: translateY(0);
+    }
+    </style>
+</head>
+<body>
+    <!-- Toast Notifications -->
+    <div id="successToast" class="toast success">
+        <i class="fas fa-check-circle mr-2"></i>
+        <span id="successMessage"></span>
+    </div>
+    <div id="errorToast" class="toast error">
+        <i class="fas fa-exclamation-circle mr-2"></i>
+        <span id="errorMessage"></span>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="bg-white shadow-sm relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center h-16">
+                <div class="flex items-center">
+                    <i class="fas fa-calendar-alt text-2xl text-indigo-600 mr-2"></i>
+                    <span id="organizationName" class="text-xl font-bold text-gray-800">Evente</span>
+                </div>
+    
+                <div class="absolute right-8 top-1/2 transform -translate-y-1/2 flex items-center space-x-4">
+                    <div class="relative mr-2">
+                        <input type="text" id="searchInput" placeholder="Search events..." 
+                            class="w-48 px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
+                    </div>
+                    
+                    <button id="showMyRegistrations" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+                        <i class="fas fa-ticket-alt mr-2"></i>My Registrations
+                    </button>
+    
+                    <div class="relative">
+                        <img id="studentAvatar" class="w-8 h-8 rounded-full cursor-pointer">
+                        <div class="profile-dropdown">
+                            <div class="py-2 px-4 text-sm text-gray-700 border-b">
+                                <div id="studentName" class="font-medium"></div>
+                                <div id="studentEmail" class="text-gray-500"></div>
+                                <div id="studentRole" class="text-gray-500 mt-1"></div>
+                            </div>
+                            <button id="logoutBtn" class="w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-700 text-sm">
+                                <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Welcome Section -->
+        <div class="welcome-card rounded-2xl p-8 mb-8">
+            <h1 id="welcomeMessage" class="text-3xl font-bold mb-2"></h1>
+            <p class="opacity-90">Discover and join campus events.</p>
+            <div class="mt-6 flex space-x-4">
+                <div class="stat-box">
+                    <div id="registeredEventsCount" class="stat-value">-</div>
+                    <div class="stat-label">Registered Events</div>
+                </div>
+                <div class="stat-box">
+                    <div id="upcomingEventsCount" class="stat-value">-</div>
+                    <div class="stat-label">Available Events</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Events Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="eventsGrid">
+            <!-- Events will be loaded here -->
+        </div>
+
+        <!-- No Events Message -->
+        <div id="noEventsMessage" class="hidden text-center py-8">
+            <i class="fas fa-calendar-times text-4xl text-gray-400 mb-4"></i>
+            <p class="text-gray-600">No events available at the moment.</p>
+        </div>
+    </div>
+
+    <!-- Event Details Modal -->
+    <div id="eventDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="min-h-screen px-4 text-center">
+            <div class="fixed inset-0 overflow-y-auto">
+                <div class="flex items-center justify-center min-h-screen">
+                    <div class="bg-white rounded-xl w-full max-w-4xl relative modal-max-height overflow-y-auto custom-scrollbar">
+                        <!-- Modal Header -->
+                        <div class="sticky top-0 bg-white p-6 border-b z-10">
+                            <div class="flex justify-between items-center">
+                                <h2 id="eventDetailsTitle" class="text-2xl font-bold text-gray-800"></h2>
+                                <button onclick="hideEventDetailsModal()" class="text-gray-500 hover:text-gray-700">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Modal Content -->
+                        <div id="eventDetailsContent" class="p-6">
+                            <!-- Event details will be populated here -->
+                        </div>
+
+                        <!-- Modal Footer -->
+                        <div class="sticky bottom-0 bg-white p-6 border-t">
+                            <div id="eventActionButton">
+                                <!-- Registration button will be added here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- My Registrations Modal -->
+    <div id="myRegistrationsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="min-h-screen px-4 text-center">
+            <div class="fixed inset-0 overflow-y-auto">
+                <div class="flex items-center justify-center min-h-screen">
+                    <div class="bg-white rounded-xl w-full max-w-4xl relative modal-max-height overflow-hidden">
+                        <!-- Modal Header -->
+                        <div class="sticky top-0 bg-white p-6 border-b z-10">
+                            <div class="flex justify-between items-center">
+                                <h2 class="text-2xl font-bold text-gray-800">My Registrations</h2>
+                                <button onclick="hideMyRegistrationsModal()" class="text-gray-500 hover:text-gray-700">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Registrations List -->
+                        <div class="p-6 overflow-y-auto custom-scrollbar">
+                            <div id="registrationsList" class="space-y-4">
+                                <!-- Registrations will be loaded here -->
+                            </div>
+                            <div id="noRegistrationsMessage" class="hidden text-center py-8">
+                                <i class="fas fa-ticket-alt text-4xl text-gray-300 mb-3"></i>
+                                <p class="text-gray-500">You haven't registered for any events yet.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Code Modal -->
+    <div id="qrModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
+            <div class="text-center">
+                <h3 class="text-2xl font-bold mb-4" id="qrEventName">Your Event Pass</h3>
+                <div id="qrCode" class="bg-white p-4 rounded-lg mb-4">
+                    <!-- QR Code will be inserted here -->
+                </div>
+                <p class="text-gray-600 mb-4">Show this QR code at the event entrance</p>
+                <button onclick="hideQRModal()" class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Authentication and user data check
+        const studentData = JSON.parse(localStorage.getItem('user'));
+        if (!studentData || studentData.role !== 'student') {
+            window.location.href = '/index.html';
+        }
+
+        let events = [];
+        let registeredEventIds = new Set();
+        let organization = null;
+
+        // Initialize UI with user data
+        async function initializeUI() {
+            try {
+                const response = await fetch('/api/organizations');
+                const data = await response.json();
+                organization = data.organizations.find(org => org.id === studentData.organizationId);
+                
+                if (organization) {
+                    document.getElementById('organizationName').textContent = organization.name;
+                    document.title = `${organization.name} - Student Dashboard`;
+                }
+
+                document.getElementById('studentAvatar').src = `https://ui-avatars.com/api/?name=${studentData.firstName}+${studentData.lastName}`;
+                document.getElementById('studentName').textContent = `${studentData.firstName} ${studentData.lastName}`;
+                document.getElementById('studentEmail').textContent = studentData.email;
+                document.getElementById('studentRole').textContent = 'Student';
+                document.getElementById('welcomeMessage').textContent = `Welcome, ${studentData.firstName}!`;
+
+                await loadDashboard();
+            } catch (error) {
+                console.error('Error initializing UI:', error);
+                showError('Failed to initialize dashboard');
+            }
+        }
+
+        // Load dashboard data
+        async function loadDashboard() {
+            try {
+                const eventsResponse = await fetch(`/api/student/events?organizationId=${studentData.organizationId}`);
+                if (!eventsResponse.ok) {
+                    throw new Error('Failed to fetch events');
+                }
+                const eventsData = await eventsResponse.json();
+                events = eventsData.events;
+
+                const registrationsResponse = await fetch(`/api/users/${studentData.id}/registrations`);
+                if (!registrationsResponse.ok) {
+                    throw new Error('Failed to fetch registrations');
+                }
+                const registrationsData = await registrationsResponse.json();
+                registeredEventIds = new Set(registrationsData.registrations.map(r => r.eventId));
+                
+                // Update stats
+                document.getElementById('registeredEventsCount').textContent = registrationsData.registrations.length;
+                document.getElementById('upcomingEventsCount').textContent = events.length;
+
+                // Render events
+                renderEvents(events);
+                document.getElementById('noEventsMessage').classList.toggle('hidden', events.length > 0);
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                showError('Failed to load events');
+            }
+        }
+
+        function renderEvents(eventsToRender) {
+            const grid = document.getElementById('eventsGrid');
+            grid.innerHTML = eventsToRender.map(event => `
+                <div class="event-card bg-white rounded-xl overflow-hidden shadow-lg">
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">${event.name}</h3>
+                        <div class="space-y-2 text-gray-600">
+                            <p><i class="fas fa-calendar-day mr-2"></i>${new Date(event.date).toLocaleDateString()}</p>
+                            <p><i class="fas fa-clock mr-2"></i>${event.time}</p>
+                            <p><i class="fas fa-map-marker-alt mr-2"></i>${event.venue}</p>
+                            <p><i class="fas fa-tag mr-2"></i>${event.feeType === "paid" ? `₹${event.ticketPrice}` : 'Free'}</p>
+                        </div>
+                        <div class="mt-4 flex justify-between items-center">
+                            <button onclick="showEventDetails(${event.id})" 
+                                class="text-indigo-600 hover:text-indigo-800">
+                                <i class="fas fa-info-circle mr-1"></i> View Details
+                            </button>
+                            ${registeredEventIds.has(event.id) ? 
+                                `<span class="px-3 py-1 bg-green-100 text-green-600 rounded-full text-sm">
+                                    <i class="fas fa-check-circle mr-1"></i> Registered
+                                </span>` :
+                                `<button onclick="registerEvent(${event.id})" 
+                                    class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+                                    Register Now
+                                </button>`
+                            }
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function showEventDetails(eventId) {
+            try {
+                const event = events.find(e => e.id === eventId);
+                if (!event) throw new Error('Event not found');
+
+                const formattedDate = new Date(event.date).toLocaleDateString();
+
+                document.getElementById('eventDetailsTitle').textContent = event.name;
+                document.getElementById('eventDetailsContent').innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <h3 class="font-semibold text-gray-700">Date & Time</h3>
+                            <p class="text-gray-600">${formattedDate} at ${event.time}</p>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-700">Venue</h3>
+                            <p class="text-gray-600">${event.venue}</p>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-700">Organizer</h3>
+                            <p class="text-gray-600">${event.organizer}</p>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-700">Registration Fee</h3>
+                            <p class="text-gray-600">${event.feeType === 'paid' ? `₹${event.ticketPrice}` : 'Free'}</p>
+                        </div>
+                    </div>
+                    <div class="mb-6">
+                        <h3 class="font-semibold text-gray-700 mb-2">Description</h3>
+                        <p class="text-gray-600">${event.description}</p>
+                    </div>
+                `;
+
+                document.getElementById('eventActionButton').innerHTML = registeredEventIds.has(event.id) ?
+                    `<button onclick="viewEventPass(${event.id})" class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">
+                        <i class="fas fa-qrcode mr-2"></i>View Event Pass
+                    </button>` :
+                    `<button onclick="registerEvent(${event.id})" class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700">
+                        Register Now
+                    </button>`;
+
+                showEventDetailsModal();
+            } catch (error) {
+                console.error('Error loading event details:', error);
+                showError('Failed to load event details');
+            }
+        }
+
+        async function registerEvent(eventId) {
+            try {
+                const response = await fetch(`/api/events/${eventId}/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: studentData.id
+                    })
+                });
+
+                if (!response.ok) throw new Error('Failed to register for event');
+
+                const data = await response.json();
+                registeredEventIds.add(eventId);
+                
+                hideEventDetailsModal();
+                showSuccess('Successfully registered for the event!');
+                showQRCode(data.registration.qrCode, events.find(e => e.id === eventId).name);
+                
+                loadDashboard();
+            } catch (error) {
+                console.error('Error registering for event:', error);
+                showError('Failed to register for event');
+            }
+        }
+
+        async function viewEventPass(eventId) {
+            try {
+                const response = await fetch(`/api/users/${studentData.id}/registrations`);
+                if (!response.ok) throw new Error('Failed to fetch registration');
+                
+                const data = await response.json();
+                const registration = data.registrations.find(r => r.eventId === eventId);
+                
+                if (registration) {
+                    const event = events.find(e => e.id === eventId);
+                    showQRCode(registration.qrCode, event ? event.name : 'Event');
+                }
+            } catch (error) {
+                console.error('Error viewing event pass:', error);
+                showError('Failed to load event pass');
+            }
+        }
+
+        async function loadMyRegistrations() {
+            try {
+                const response = await fetch(`/api/users/${studentData.id}/registrations`);
+                if (!response.ok) throw new Error('Failed to fetch registrations');
+                
+                const data = await response.json();
+                const registrationsList = document.getElementById('registrationsList');
+                const noRegistrationsMsg = document.getElementById('noRegistrationsMessage');
+
+                if (data.registrations.length === 0) {
+                    registrationsList.innerHTML = '';
+                    noRegistrationsMsg.classList.remove('hidden');
+                    return;
+                }
+
+                noRegistrationsMsg.classList.add('hidden');
+                registrationsList.innerHTML = data.registrations.map(reg => {
+                    const event = events.find(e => e.id === reg.eventId);
+                    if (!event) return '';
+                    
+                    return `
+                        <div class="bg-white rounded-lg border p-4">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h3 class="font-semibold text-gray-800">${event.name || 'Untitled Event'}</h3>
+                                    <p class="text-sm text-gray-600">${new Date(event.date).toLocaleDateString()} at ${event.time || 'Time TBA'}</p>
+                                    <p class="text-sm text-gray-600">${event.venue || 'Venue TBA'}</p>
+                                </div>
+                                <button onclick="viewEventPass(${event.id})" 
+                                        class="text-indigo-600 hover:text-indigo-800">
+                                    <i class="fas fa-qrcode mr-1"></i> View Pass
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                document.getElementById('myRegistrationsModal').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error loading registrations:', error);
+                showError('Failed to load registrations');
+            }
+        }
+
+        function showQRCode(qrCode, eventName) {
+            document.getElementById('qrEventName').textContent = `Event Pass: ${eventName || 'Event'}`;
+            document.getElementById('qrCode').innerHTML = `<img src="${qrCode}" alt="Event QR Code" class="mx-auto">`;
+            document.getElementById('qrModal').classList.remove('hidden');
+        }
+
+        // Toast notifications
+        function showSuccess(message) {
+            const toast = document.getElementById('successToast');
+            document.getElementById('successMessage').textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function showError(message) {
+            const toast = document.getElementById('errorToast');
+            document.getElementById('errorMessage').textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Modal control functions
+        function showEventDetailsModal() {
+            document.getElementById('eventDetailsModal').classList.remove('hidden');
+        }
+
+        function hideEventDetailsModal() {
+            document.getElementById('eventDetailsModal').classList.add('hidden');
+        }
+
+        function hideMyRegistrationsModal() {
+            document.getElementById('myRegistrationsModal').classList.add('hidden');
+        }
+
+        function hideQRModal() {
+            document.getElementById('qrModal').classList.add('hidden');
+        }
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredEvents = events.filter(event => 
+                event.name.toLowerCase().includes(searchTerm) ||
+                (event.venue && event.venue.toLowerCase().includes(searchTerm)) ||
+                (event.description && event.description.toLowerCase().includes(searchTerm))
+            );
+            renderEvents(filteredEvents);
+            document.getElementById('noEventsMessage').classList.toggle('hidden', filteredEvents.length > 0);
+        });
+
+        // Event listeners
+        document.getElementById('showMyRegistrations').addEventListener('click', loadMyRegistrations);
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('user');
+            window.location.href = '/index.html';
+        });
+
+        // Initialize app
+        initializeUI();
+        setInterval(loadDashboard, 30000);
+    </script>
+</body>
+</html>

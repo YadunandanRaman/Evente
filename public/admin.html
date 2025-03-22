@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evente - Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=optional" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #4158D0;
+            background-image: linear-gradient(43deg, #4158D0 0%, #C850C0 46%, #FFCC70 100%);
+            background-attachment: fixed;
+        }
+        .sidebar-link:hover {
+            background-color: #f3f4f6;
+        }
+        .sidebar-link.active {
+            background-color: #4f46e5;
+            color: white;
+        }
+        .modal-max-height {
+            max-height: calc(100vh - 4rem);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            z-index: 100;
+            transform: translateY(-100px);
+            transition: transform 0.3s ease;
+        }
+        .toast.success {
+            background-color: #10b981;
+        }
+        .toast.error {
+            background-color: #ef4444;
+        }
+        .toast.show {
+            transform: translateY(0);
+        }
+        
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 18rem;
+            }
+            .main-content {
+                margin-left: 18rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                position: fixed;
+                z-index: 40;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .mobile-menu-btn {
+                display: block !important;
+            }
+        }
+    </style>
+</head>
+<body class="flex h-screen">
+    <!-- Toast Notifications -->
+    <div id="successToast" class="toast success">
+        <i class="fas fa-check-circle mr-2"></i>
+        <span id="successMessage"></span>
+    </div>
+    <div id="errorToast" class="toast error">
+        <i class="fas fa-exclamation-circle mr-2"></i>
+        <span id="errorMessage"></span>
+    </div>
+
+    <!-- Mobile Menu Button (hidden on larger screens) -->
+    <button id="mobileMenuBtn" class="fixed top-4 right-4 z-50 bg-indigo-600 text-white p-2 rounded-md hidden mobile-menu-btn">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white shadow-lg flex flex-col sidebar" id="sidebar">
+        <div class="p-4 border-b flex items-center space-x-2">
+            <i class="fas fa-calendar-alt text-2xl text-indigo-600"></i>
+            <span id="organizationName" class="font-bold text-xl">Evente</span>
+        </div>
+        <nav class="flex-1 p-4">
+            <div class="space-y-2">
+                <a href="#" onclick="showDashboard()" class="sidebar-link active flex items-center space-x-3 p-3 rounded-lg">
+                    <i class="fas fa-chart-line w-5"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" onclick="showPendingApprovals()" class="sidebar-link flex items-center space-x-3 p-3 rounded-lg text-gray-600">
+                    <i class="fas fa-calendar-check w-5"></i>
+                    <span>Event Approvals</span>
+                </a>
+                <a href="#" onclick="showOrganizerApprovals()" class="sidebar-link flex items-center space-x-3 p-3 rounded-lg text-gray-600">
+                    <i class="fas fa-users-cog w-5"></i>
+                    <span>Organizer Approvals</span>
+                </a>
+                <a href="#" onclick="showUserManagement()" class="sidebar-link flex items-center space-x-3 p-3 rounded-lg text-gray-600">
+                    <i class="fas fa-users w-5"></i>
+                    <span>User Management</span>
+                </a>
+            </div>
+        </nav>
+        <div class="p-4 border-t">
+            <div class="flex items-center space-x-3">
+                <img id="adminAvatar" class="w-10 h-10 rounded-full">
+                <div>
+                    <div id="adminName" class="font-medium text-gray-800"></div>
+                    <div id="adminEmail" class="text-sm text-gray-500"></div>
+                </div>
+            </div>
+            <button id="logoutBtn" class="mt-4 w-full bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">
+                <i class="fas fa-sign-out-alt mr-2"></i>Logout
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto main-content" id="mainContent">
+        <!-- Top Bar -->
+        <div class="bg-white shadow-sm">
+            <div class="px-8 py-4 flex justify-between items-center">
+                <h1 id="pageTitle" class="text-2xl font-bold">Admin Dashboard</h1>
+            </div>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div class="p-8">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white rounded-xl p-6 shadow-sm">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mr-4">
+                            <i class="fas fa-clock text-yellow-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-gray-500 text-sm">Pending Events</p>
+                            <h3 id="pendingEventsCount" class="text-2xl font-bold">-</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl p-6 shadow-sm">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mr-4">
+                            <i class="fas fa-users text-purple-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-gray-500 text-sm">Pending Organizers</p>
+                            <h3 id="pendingOrganizersCount" class="text-2xl font-bold">-</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl p-6 shadow-sm">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                            <i class="fas fa-calendar-check text-green-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-gray-500 text-sm">Active Events</p>
+                            <h3 id="activeEventsCount" class="text-2xl font-bold">-</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl p-6 shadow-sm">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                            <i class="fas fa-user-check text-blue-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-gray-500 text-sm">Total Users</p>
+                            <h3 id="totalUsersCount" class="text-2xl font-bold">-</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Sections -->
+            <div id="dashboardContent">
+                <!-- Dashboard Overview -->
+                <div id="overviewSection">
+                    <!-- Recent Events Section -->
+                    <div class="bg-white rounded-xl shadow-sm mb-8">
+                        <div class="p-6 border-b">
+                            <h2 class="text-xl font-bold">Recent Events</h2>
+                        </div>
+                        <div class="p-6">
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead>
+                                        <tr class="text-left text-gray-500 text-sm">
+                                            <th class="pb-4">Event Name</th>
+                                            <th class="pb-4">Organizer</th>
+                                            <th class="pb-4">Date</th>
+                                            <th class="pb-4">Status</th>
+                                            <th class="pb-4">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recentEventsTable">
+                                        <!-- Recent events will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Users Section -->
+                    <div class="bg-white rounded-xl shadow-sm">
+                        <div class="p-6 border-b">
+                            <h2 class="text-xl font-bold">Recent Users</h2>
+                        </div>
+                        <div class="p-6">
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead>
+                                        <tr class="text-left text-gray-500 text-sm">
+                                            <th class="pb-4">Name</th>
+                                            <th class="pb-4">Email</th>
+                                            <th class="pb-4">Role</th>
+                                            <th class="pb-4">Join Date</th>
+                                            <th class="pb-4">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recentUsersTable">
+                                        <!-- Recent users will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pending Events Section -->
+                <div id="pendingEventsSection" class="hidden">
+                    <div class="bg-white rounded-xl shadow-sm">
+                        <div class="p-6 border-b flex justify-between items-center">
+                            <h2 class="text-xl font-bold">Pending Event Approvals</h2>
+                            <button onclick="showDashboard()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                                <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                            </button>
+                        </div>
+                        <div class="p-6">
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead>
+                                        <tr class="text-left text-gray-500 text-sm">
+                                            <th class="pb-4">Event Name</th>
+                                            <th class="pb-4">Organizer</th>
+                                            <th class="pb-4">Date</th>
+                                            <th class="pb-4">Status</th>
+                                            <th class="pb-4">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="pendingEventsTable">
+                                        <!-- Pending events will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="noPendingEventsMessage" class="hidden text-center py-8">
+                                <i class="fas fa-check-circle text-4xl text-green-400 mb-4"></i>
+                                <p class="text-gray-600">No pending events to approve.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pending Organizers Section -->
+                <div id="pendingOrganizersSection" class="hidden">
+                    <div class="bg-white rounded-xl shadow-sm">
+                        <div class="p-6 border-b flex justify-between items-center">
+                            <h2 class="text-xl font-bold">Pending Organizer Approvals</h2>
+                            <button onclick="showDashboard()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                                <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                            </button>
+                        </div>
+                        <div class="p-6">
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead>
+                                        <tr class="text-left text-gray-500 text-sm">
+                                            <th class="pb-4">Name</th>
+                                            <th class="pb-4">Email</th>
+                                            <th class="pb-4">Registration Date</th>
+                                            <th class="pb-4">Status</th>
+                                            <th class="pb-4">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="pendingOrganizersTable">
+                                        <!-- Pending organizers will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="noPendingOrganizersMessage" class="hidden text-center py-8">
+                                <i class="fas fa-check-circle text-4xl text-green-400 mb-4"></i>
+                                <p class="text-gray-600">No pending organizers to approve.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Management Section -->
+                <div id="userManagementSection" class="hidden">
+                    <div class="bg-white rounded-xl shadow-sm">
+                        <div class="p-6 border-b flex flex-wrap justify-between items-center gap-4">
+                            <h2 class="text-xl font-bold">User Management</h2>
+                            <div class="flex flex-wrap space-x-4">
+                                <div class="relative">
+                                    <input type="text" id="userSearchInput" placeholder="Search users..." 
+                                        class="w-64 px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
+                                </div>
+                                <select id="userRoleFilter" class="px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <option value="">All Roles</option>
+                                    <option value="student">Students</option>
+                                    <option value="employee">Employees</option>
+                                    <option value="organizer">Organizers</option>
+                                </select>
+                            </div>
+                            <button onclick="showDashboard()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                                <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                            </button>
+                        </div>
+                        <div class="p-6">
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead>
+                                        <tr class="text-left text-gray-500 text-sm">
+                                            <th class="pb-4">Name</th>
+                                            <th class="pb-4">Email</th>
+                                            <th class="pb-4">Role</th>
+                                            <th class="pb-4">Status</th>
+                                            <th class="pb-4">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="usersTable">
+                                        <!-- Users will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Event Details Modal -->
+    <div id="eventDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="min-h-screen px-4 text-center">
+            <div class="fixed inset-0 overflow-y-auto">
+                <div class="flex items-center justify-center min-h-screen">
+                    <div class="bg-white rounded-xl w-full max-w-4xl relative modal-max-height overflow-y-auto custom-scrollbar">
+                        <!-- Modal content will be dynamically inserted here -->
+                        <div class="sticky top-0 bg-white p-6 border-b z-10">
+                            <div class="flex justify-between items-center">
+                                <h2 id="eventDetailsTitle" class="text-2xl font-bold text-gray-800">Event Details</h2>
+                                <button onclick="hideEventDetailsModal()" class="text-gray-500 hover:text-gray-700">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="eventDetailsContent" class="p-6">
+                            <!-- Event details will be loaded here -->
+                        </div>
+                        <div class="p-6 border-t flex justify-end space-x-4">
+                            <button onclick="rejectEventFromModal()" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+                                Reject Event
+                            </button>
+                            <button onclick="approveEventFromModal()" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
+                                Approve Event
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Authentication check
+        const adminData = JSON.parse(localStorage.getItem('user'));
+        if (!adminData || adminData.role !== 'admin') {
+            window.location.href = '/index.html';
+        }
+
+        let organization = null;
+        let currentEventId = null;
+
+        // Mobile menu toggle
+        document.getElementById('mobileMenuBtn')?.addEventListener('click', () => {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        });
+
+        // Initialize UI
+        async function initializeUI() {
+            try {
+                const response = await fetch('/api/organizations');
+                const data = await response.json();
+                organization = data.organizations.find(org => org.id === adminData.organizationId);
+                
+                if (organization) {
+                    document.getElementById('organizationName').textContent = organization.name;
+                    document.title = `${organization.name} - Admin Dashboard`;
+                }
+
+                document.getElementById('adminAvatar').src = `https://ui-avatars.com/api/?name=${adminData.firstName}+${adminData.lastName}`;
+                document.getElementById('adminName').textContent = `${adminData.firstName} ${adminData.lastName}`;
+                document.getElementById('adminEmail').textContent = adminData.email;
+
+                await loadDashboard();
+            } catch (error) {
+                console.error('Error initializing UI:', error);
+                showError('Failed to initialize dashboard');
+            }
+        }
+
+        async function loadDashboard() {
+            try {
+                const response = await fetch(`/api/admin/dashboard-stats?organizationId=${adminData.organizationId}`);
+                if (!response.ok) throw new Error('Failed to fetch dashboard stats');
+                
+                const { stats } = await response.json();
+
+                // Update stats
+                document.getElementById('pendingEventsCount').textContent = stats.pendingApprovals;
+                document.getElementById('pendingOrganizersCount').textContent = stats.pendingOrganizers.length;
+                document.getElementById('activeEventsCount').textContent = stats.activeEvents;
+                document.getElementById('totalUsersCount').textContent = stats.totalUsers;
+
+                // Update pending events table
+                const eventsTableBody = document.getElementById('pendingEventsTable');
+                if (stats.pendingEvents.length === 0) {
+                    document.getElementById('noPendingEventsMessage')?.classList.remove('hidden');
+                    eventsTableBody.innerHTML = '';
+                } else {
+                    document.getElementById('noPendingEventsMessage')?.classList.add('hidden');
+                    eventsTableBody.innerHTML = stats.pendingEvents.map(event => `
+                        <tr class="border-t">
+                            <td class="py-4">${event.name}</td>
+                            <td class="py-4">${event.organizer}</td>
+                            <td class="py-4">${new Date(event.date).toLocaleDateString()}</td>
+                            <td class="py-4">
+                                <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">
+                                    Pending
+                                </span>
+                            </td>
+                            <td class="py-4">
+                                <div class="flex space-x-2">
+                                    <button onclick="viewEventDetails(${event.id})" 
+                                        class="px-3 py-1 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200">
+                                        View
+                                    </button>
+                                    <button onclick="approveEvent(${event.id})" 
+                                        class="px-3 py-1 bg-green-100 text-green-600 rounded-lg hover:bg-green-200">
+                                        Approve
+                                    </button>
+                                    <button onclick="rejectEvent(${event.id})" 
+                                        class="px-3 py-1 bg-red-100 text-red-600 rounded-lg hover:bg-red-200">
+                                        Reject
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+
+                // Update pending organizers table
+                const organizersTableBody = document.getElementById('pendingOrganizersTable');
+                if (stats.pendingOrganizers.length === 0) {
+                    document.getElementById('noPendingOrganizersMessage')?.classList.remove('hidden');
+                    organizersTableBody.innerHTML = '';
+                } else {
+                    document.getElementById('noPendingOrganizersMessage')?.classList.add('hidden');
+                    organizersTableBody.innerHTML = stats.pendingOrganizers.map(organizer => `
+                        <tr class="border-t">
+                            <td class="py-4">${organizer.firstName} ${organizer.lastName}</td>
+                            <td class="py-4">${organizer.email}</td>
+                            <td class="py-4">${new Date(organizer.createdAt).toLocaleDateString()}</td>
+                            <td class="py-4">
+                                <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">
+                                    Pending
+                                </span>
+                            </td>
+                            <td class="py-4">
+                                <div class="flex space-x-2">
+                                    <button onclick="approveOrganizer(${organizer.id})" 
+                                        class="px-3 py-1 bg-green-100 text-green-600 rounded-lg hover:bg-green-200">
+                                        Approve
+                                    </button>
+                                    <button onclick="rejectOrganizer(${organizer.id})" 
+                                        class="px-3 py-1 bg-red-100 text-red-600 rounded-lg hover:bg-red-200">
+                                        Reject
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+
+                // Update recent events table
+                document.getElementById('recentEventsTable').innerHTML = stats.recentEvents.map(event => `
+                    <tr class="border-t">
+                        <td class="py-4">${event.name}</td>
+                        <td class="py-4">${event.organizer}</td>
+                        <td class="py-4">${new Date(event.date).toLocaleDateString()}</td>
+                        <td class="py-4">
+                            <span class="px-3 py-1 ${
+                                event.status === 'approved' ? 'bg-green-100 text-green-600' : 
+                                event.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-red-100 text-red-600'
+                            } rounded-full text-sm">
+                                ${event.status.charAt(0).toUpperCase() + event.status.slice(1)}
+                            </span>
+                        </td>
+                        <td class="py-4">
+                            <button onclick="viewEventDetails(${event.id})" 
+                                class="px-3 py-1 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200">
+                                View
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+
+                // Update recent users table - only showing approved organizers on dashboard
+                const filteredRecentUsers = stats.recentUsers.filter(user => 
+                    !(user.role === 'organizer' && !user.approved));
+                
+                document.getElementById('recentUsersTable').innerHTML = filteredRecentUsers.map(user => `
+                    <tr class="border-t">
+                        <td class="py-4">${user.firstName} ${user.lastName}</td>
+                        <td class="py-4">${user.email}</td>
+                        <td class="py-4">${user.role.charAt(0).toUpperCase() + user.role.slice(1)}</td>
+                        <td class="py-4">${new Date(user.createdAt).toLocaleDateString()}</td>
+                        <td class="py-4">
+                            ${user.role === 'organizer' && !user.approved ? `
+                                <button onclick="approveOrganizer(${user.id})" 
+                                    class="px-3 py-1 bg-green-100 text-green-600 rounded-lg hover:bg-green-200">
+                                    Approve
+                                </button>
+                            ` : ''}
+                        </td>
+                    </tr>
+                `).join('');
+
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                showError('Failed to load dashboard data');
+            }
+        }
+
+        async function loadUserManagement() {
+            try {
+                const response = await fetch(`/api/admin/users?organizationId=${adminData.organizationId}`);
+                if (!response.ok) throw new Error('Failed to fetch users');
+                
+                const { users } = await response.json();
+                const tableBody = document.getElementById('usersTable');
+                
+                tableBody.innerHTML = users.map(user => `
+                    <tr class="border-t">
+                        <td class="py-4">${user.firstName} ${user.lastName}</td>
+                        <td class="py-4">${user.email}</td>
+                        <td class="py-4">${user.role.charAt(0).toUpperCase() + user.role.slice(1)}</td>
+                        <td class="py-4">
+                            <span class="px-3 py-1 ${
+                                user.approved ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-800'
+                            } rounded-full text-sm">
+                                ${user.approved ? 'Active' : 'Pending'}
+                            </span>
+                        </td>
+                        <td class="py-4">
+                            <div class="flex space-x-2">
+                                ${!user.approved ? `
+                                    <button onclick="approveUser(${user.id})" 
+                                        class="px-3 py-1 bg-green-100 text-green-600 rounded-lg hover:bg-green-200">
+                                        Approve
+                                    </button>
+                                ` : ''}
+                                <button onclick="toggleUserStatus(${user.id})" 
+                                    class="px-3 py-1 ${
+                                        user.approved ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'
+                                    } rounded-lg hover:bg-opacity-80">
+                                    ${user.approved ? 'Deactivate' : 'Activate'}
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading users:', error);
+                showError('Failed to load user data');
+            }
+        }
+
+        async function viewEventDetails(eventId) {
+            try {
+                currentEventId = eventId;
+                
+                // Fetch event details
+                const response = await fetch(`/api/events?organizationId=${adminData.organizationId}`);
+                if (!response.ok) throw new Error('Failed to fetch events');
+                
+                const { events } = await response.json();
+                const event = events.find(e => e.id === eventId);
+                
+                if (!event) {
+                    showError('Event not found');
+                    return;
+                }
+                
+                // Fetch organizer details
+                const usersResponse = await fetch(`/api/admin/users?organizationId=${adminData.organizationId}`);
+                if (!usersResponse.ok) throw new Error('Failed to fetch users');
+                
+                const { users } = await usersResponse.json();
+                const organizer = users.find(u => u.id === event.organizerId);
+                
+                document.getElementById('eventDetailsTitle').textContent = event.name;
+                
+                document.getElementById('eventDetailsContent').innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <h3 class="font-semibold text-gray-700">Date & Time</h3>
+                            <p class="text-gray-600">${new Date(event.date).toLocaleDateString()} at ${event.time}</p>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-700">Venue</h3>
+                            <p class="text-gray-600">${event.venue}</p>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-700">Organizer</h3>
+                            <p class="text-gray-600">${organizer ? `${organizer.firstName} ${organizer.lastName}` : 'Unknown'}</p>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-700">Status</h3>
+                            <p class="text-gray-600">
+                                <span class="px-3 py-1 ${
+                                    event.status === 'approved' ? 'bg-green-100 text-green-600' : 
+                                    event.status === 'rejected' ? 'bg-red-100 text-red-600' :
+                                    'bg-yellow-100 text-yellow-800'
+                                } rounded-full text-sm">
+                                    ${event.status.charAt(0).toUpperCase() + event.status.slice(1)}
+                                </span>
+                            </p>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-700">Fee Type</h3>
+                            <p class="text-gray-600">${event.feeType === 'paid' ? `Paid (₹${event.ticketPrice})` : 'Free'}</p>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-700">Capacity</h3>
+                            <p class="text-gray-600">${event.capacity || 'Unlimited'}</p>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-700 mb-2">Description</h3>
+                        <p class="text-gray-600">${event.description}</p>
+                    </div>
+                    ${event.status !== 'pending' ? `
+                        <div class="mt-6 p-4 ${
+                            event.status === 'approved' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+                        } rounded-lg">
+                            <p><i class="fas ${
+                                event.status === 'approved' ? 'fa-check-circle' : 'fa-times-circle'
+                            } mr-2"></i> This event has been ${event.status}.</p>
+                        </div>
+                    ` : ''}
+                `;
+                
+                // Show/hide action buttons based on event status
+                const actionButtons = document.querySelector('#eventDetailsModal .border-t');
+                if (event.status === 'pending') {
+                    actionButtons.classList.remove('hidden');
+                } else {
+                    actionButtons.classList.add('hidden');
+                }
+                
+                document.getElementById('eventDetailsModal').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error viewing event details:', error);
+                showError('Failed to load event details');
+            }
+        }
+
+        async function approveEvent(eventId) {
+            try {
+                const response = await fetch(`/api/admin/approve-event/${eventId}`, {
+                    method: 'PUT'
+                });
+                if (response.ok) {
+                    showSuccess('Event approved successfully');
+                    await loadDashboard();
+                    
+                    // If event details modal is open, close it
+                    if (!document.getElementById('eventDetailsModal').classList.contains('hidden')) {
+                        hideEventDetailsModal();
+                    }
+                } else {
+                    showError('Failed to approve event');
+                }
+            } catch (error) {
+                console.error('Error approving event:', error);
+                showError('Failed to approve event');
+            }
+        }
+
+        async function rejectEvent(eventId) {
+            try {
+                const response = await fetch(`/api/admin/reject-event/${eventId}`, {
+                    method: 'PUT'
+                });
+                if (response.ok) {
+                    showSuccess('Event rejected successfully');
+                    await loadDashboard();
+                    
+                    // If event details modal is open, close it
+                    if (!document.getElementById('eventDetailsModal').classList.contains('hidden')) {
+                        hideEventDetailsModal();
+                    }
+                } else {
+                    showError('Failed to reject event');
+                }
+            } catch (error) {
+                console.error('Error rejecting event:', error);
+                showError('Failed to reject event');
+            }
+        }
+
+        async function approveOrganizer(organizerId) {
+            try {
+                const response = await fetch(`/api/admin/approve-organizer/${organizerId}`, {
+                    method: 'PUT'
+                });
+                if (response.ok) {
+                    showSuccess('Organizer approved successfully');
+                    await loadDashboard();
+                    if (!document.getElementById('userManagementSection').classList.contains('hidden')) {
+                        await loadUserManagement();
+                    }
+                } else {
+                    showError('Failed to approve organizer');
+                }
+            } catch (error) {
+                console.error('Error approving organizer:', error);
+                showError('Failed to approve organizer');
+            }
+        }
+
+        async function rejectOrganizer(organizerId) {
+            try {
+                const response = await fetch(`/api/admin/reject-organizer/${organizerId}`, {
+                    method: 'PUT'
+                });
+                if (response.ok) {
+                    showSuccess('Organizer rejected successfully');
+                    await loadDashboard();
+                    if (!document.getElementById('userManagementSection').classList.contains('hidden')) {
+                        await loadUserManagement();
+                    }
+                } else {
+                    showError('Failed to reject organizer');
+                }
+            } catch (error) {
+                console.error('Error rejecting organizer:', error);
+                showError('Failed to reject organizer');
+            }
+        }
+
+        async function toggleUserStatus(userId) {
+            try {
+                const response = await fetch(`/api/admin/toggle-user-status/${userId}`, {
+                    method: 'PUT'
+                });
+                if (response.ok) {
+                    showSuccess('User status updated successfully');
+                    await loadUserManagement();
+                    // Also refresh dashboard if visible
+                    if (!document.getElementById('overviewSection').classList.contains('hidden')) {
+                        await loadDashboard();
+                    }
+                } else {
+                    showError('Failed to update user status');
+                }
+            } catch (error) {
+                console.error('Error toggling user status:', error);
+                showError('Failed to update user status');
+            }
+        }
+
+        function approveUser(userId) {
+            // For students/employees, this is the same as toggle
+            toggleUserStatus(userId);
+        }
+
+        function approveEventFromModal() {
+            if (currentEventId) {
+                approveEvent(currentEventId);
+            }
+        }
+
+        function rejectEventFromModal() {
+            if (currentEventId) {
+                rejectEvent(currentEventId);
+            }
+        }
+
+        // View handlers
+        function showDashboard() {
+            document.getElementById('pageTitle').textContent = 'Admin Dashboard';
+            document.getElementById('overviewSection').classList.remove('hidden');
+            document.getElementById('pendingEventsSection').classList.add('hidden');
+            document.getElementById('pendingOrganizersSection').classList.add('hidden');
+            document.getElementById('userManagementSection').classList.add('hidden');
+            updateActiveSidebarLink('Dashboard');
+            loadDashboard(); // Refresh dashboard data
+        }
+
+        function showPendingApprovals() {
+            document.getElementById('pageTitle').textContent = 'Event Approvals';
+            document.getElementById('overviewSection').classList.add('hidden');
+            document.getElementById('pendingEventsSection').classList.remove('hidden');
+            document.getElementById('pendingOrganizersSection').classList.add('hidden');
+            document.getElementById('userManagementSection').classList.add('hidden');
+            updateActiveSidebarLink('Event Approvals');
+        }
+
+        function showOrganizerApprovals() {
+            document.getElementById('pageTitle').textContent = 'Organizer Approvals';
+            document.getElementById('overviewSection').classList.add('hidden');
+            document.getElementById('pendingEventsSection').classList.add('hidden');
+            document.getElementById('pendingOrganizersSection').classList.remove('hidden');
+            document.getElementById('userManagementSection').classList.add('hidden');
+            updateActiveSidebarLink('Organizer Approvals');
+        }
+
+        function showUserManagement() {
+            document.getElementById('pageTitle').textContent = 'User Management';
+            document.getElementById('overviewSection').classList.add('hidden');
+            document.getElementById('pendingEventsSection').classList.add('hidden');
+            document.getElementById('pendingOrganizersSection').classList.add('hidden');
+            document.getElementById('userManagementSection').classList.remove('hidden');
+            updateActiveSidebarLink('User Management');
+            loadUserManagement();
+        }
+
+        function hideEventDetailsModal() {
+            document.getElementById('eventDetailsModal').classList.add('hidden');
+            currentEventId = null;
+        }
+
+        function updateActiveSidebarLink(activeText) {
+            document.querySelectorAll('.sidebar-link').forEach(link => {
+                if (link.textContent.trim() === activeText) {
+                    link.classList.add('active', 'bg-indigo-50', 'text-indigo-600');
+                    link.classList.remove('text-gray-600');
+                } else {
+                    link.classList.remove('active', 'bg-indigo-50', 'text-indigo-600');
+                    link.classList.add('text-gray-600');
+                }
+            });
+        }
+
+        // Toast notifications
+        function showSuccess(message) {
+            const toast = document.getElementById('successToast');
+            document.getElementById('successMessage').textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function showError(message) {
+            const toast = document.getElementById('errorToast');
+            document.getElementById('errorMessage').textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Search functionality
+        document.getElementById('userSearchInput')?.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const roleFilter = document.getElementById('userRoleFilter').value;
+            filterUsers(searchTerm, roleFilter);
+        });
+
+        document.getElementById('userRoleFilter')?.addEventListener('change', (e) => {
+            const searchTerm = document.getElementById('userSearchInput').value.toLowerCase();
+            const roleFilter = e.target.value;
+            filterUsers(searchTerm, roleFilter);
+        });
+
+        async function filterUsers(searchTerm, roleFilter) {
+            try {
+                const response = await fetch(`/api/admin/users?organizationId=${adminData.organizationId}`);
+                if (!response.ok) throw new Error('Failed to fetch users');
+                
+                const { users } = await response.json();
+                const filteredUsers = users.filter(user => {
+                    const matchesSearch = 
+                        user.firstName.toLowerCase().includes(searchTerm) ||
+                        user.lastName.toLowerCase().includes(searchTerm) ||
+                        user.email.toLowerCase().includes(searchTerm);
+                    const matchesRole = !roleFilter || user.role === roleFilter;
+                    return matchesSearch && matchesRole;
+                });
+
+                renderUsers(filteredUsers);
+            } catch (error) {
+                console.error('Error filtering users:', error);
+                showError('Failed to filter users');
+            }
+        }
+
+        function renderUsers(users) {
+            const tableBody = document.getElementById('usersTable');
+            // Use the same user row rendering logic as in loadUserManagement
+            tableBody.innerHTML = users.map(user => `
+                <tr class="border-t">
+                    <td class="py-4">${user.firstName} ${user.lastName}</td>
+                    <td class="py-4">${user.email}</td>
+                    <td class="py-4">${user.role.charAt(0).toUpperCase() + user.role.slice(1)}</td>
+                    <td class="py-4">
+                        <span class="px-3 py-1 ${
+                            user.approved ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-800'
+                        } rounded-full text-sm">
+                            ${user.approved ? 'Active' : 'Pending'}
+                        </span>
+                    </td>
+                    <td class="py-4">
+                        <div class="flex space-x-2">
+                            ${!user.approved ? `
+                                <button onclick="approveUser(${user.id})" 
+                                    class="px-3 py-1 bg-green-100 text-green-600 rounded-lg hover:bg-green-200">
+                                    Approve
+                                </button>
+                            ` : ''}
+                            <button onclick="toggleUserStatus(${user.id})" 
+                                class="px-3 py-1 ${
+                                    user.approved ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'
+                                } rounded-lg hover:bg-opacity-80">
+                                ${user.approved ? 'Deactivate' : 'Activate'}
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Event listener for logout
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('user');
+            window.location.href = '/index.html';
+        });
+
+        // Initialize the dashboard
+        initializeUI();
+        setInterval(loadDashboard, 30000);
+    </script>
+</body>
+</html>

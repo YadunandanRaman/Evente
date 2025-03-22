@@ -1,0 +1,81 @@
+[
+  {
+    "id": 1,
+    "firstName": "Admin",
+    "lastName": "SNU Chennai",
+    "email": "admin@snuchennai.com",
+    "password": "admin123",
+    "role": "admin",
+    "organizationId": 1,
+    "approved": true,
+    "createdAt": "2025-02-24T13:12:26.192Z"
+  },
+  {
+    "id": 2,
+    "firstName": "Coding Club",
+    "lastName": "SNUC",
+    "email": "abc@test.com",
+    "password": "123",
+    "role": "organizer",
+    "organizationId": 1,
+    "approved": true,
+    "createdAt": "2025-02-24T13:13:09.307Z",
+    "approvedAt": "2025-02-25T11:07:01.685Z"
+  },
+  {
+    "id": 3,
+    "firstName": "Yadu",
+    "lastName": ".",
+    "email": "test@test.com",
+    "password": "123",
+    "role": "student",
+    "organizationId": 1,
+    "approved": true,
+    "createdAt": "2025-02-24T13:15:29.084Z"
+  },
+  {
+    "id": 4,
+    "firstName": "Admin",
+    "lastName": "Infosys",
+    "email": "admin@infosys.com",
+    "password": "admin123",
+    "role": "admin",
+    "organizationId": 2,
+    "approved": true,
+    "createdAt": "2025-02-25T11:07:21.868Z"
+  },
+  {
+    "id": 5,
+    "firstName": "XYZ",
+    "lastName": "A",
+    "email": "123@123.com",
+    "password": "123",
+    "role": "employee",
+    "organizationId": 2,
+    "approved": true,
+    "createdAt": "2025-02-25T11:15:58.646Z"
+  },
+  {
+    "id": 6,
+    "firstName": "Org",
+    "lastName": ".",
+    "email": "org@test.com",
+    "password": "123",
+    "role": "organizer",
+    "organizationId": 2,
+    "approved": true,
+    "createdAt": "2025-02-25T11:20:17.867Z",
+    "approvedAt": "2025-02-25T11:20:58.928Z"
+  },
+  {
+    "id": 7,
+    "firstName": "Yadu",
+    "lastName": ".",
+    "email": "abcd@test.com",
+    "password": "123",
+    "role": "student",
+    "organizationId": 1,
+    "approved": true,
+    "createdAt": "2025-02-27T16:24:43.300Z"
+  }
+]
