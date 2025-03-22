@@ -1,0 +1,84 @@
+[
+  {
+    "id": 1,
+    "name": "SNUC Hacksssss",
+    "date": "2025-02-27",
+    "time": "18:46",
+    "venue": "AB-3",
+    "description": "a",
+    "capacity": null,
+    "organizerId": 2,
+    "organizationId": 1,
+    "feeType": "free",
+    "ticketPrice": 0,
+    "status": "approved",
+    "createdAt": "2025-02-24T13:14:31.652Z",
+    "registrations": [
+      {
+        "id": 1,
+        "eventId": 1,
+        "userId": 3,
+        "qrCode": "data:image/png;base64,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",
+        "createdAt": "2025-02-24T13:15:46.917Z"
+      },
+      {
+        "id": 4,
+        "eventId": 1,
+        "userId": 7,
+        "qrCode": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAACkCAYAAAAZtYVBAAAAAklEQVR4AewaftIAAAYmSURBVO3BQY4cy5LAQDLQ978yR0tfJZCoaineHzezP1jrEoe1LnJY6yKHtS5yWOsih7UucljrIoe1LnJY6yKHtS5yWOsih7UucljrIoe1LnJY6yKHtS7yw4dU/qaKSeU3VbyhMlU8UXmjYlKZKiaVv6niE4e1LnJY6yKHtS7yw5dVfJPKk4pJ5Y2KT6h8omJSeaPijYpvUvmmw1oXOax1kcNaF/nhl6m8UfGGypOKN1SmikllqviEyhsqU8UnVN6o+E2HtS5yWOsih7Uu8sN/XMWk8obKVPGk4psq3lD5X3ZY6yKHtS5yWOsiP/w/ozJVTCpTxaQyVbyh8kbFE5Wp4r/ssNZFDmtd5LDWRX74ZRW/SWWqeFIxqXyTylQxVUwq/1LFTQ5rXeSw1kUOa13khy9TuYnKVPGkYlKZKiaVqWJSmSqeVEwqU8Wk8obKzQ5rXeSw1kUOa13khw9V/EsVk8pvUnmjYlJ5o+JJxZOK/5LDWhc5rHWRw1oX+eFDKlPFpDJVvKHypGKqmFQ+UfFE5YnKN6k8qXiiMlU8UZkqJpWp4hOHtS5yWOsih7Uu8sOHKiaVqeKJylQxVTxRmSqmikllqphU/qaKSeWNit9UMan8psNaFzmsdZHDWhexP/iAylQxqfymiicqTyreUJkqJpVPVEwqTyomlW+qeKIyVXzisNZFDmtd5LDWRewPvkjlScUTlaniDZWp4g2VqeKJylTxhspU8ZtUpopJZaqYVKaKbzqsdZHDWhc5rHWRH/4xlaliUpkqPqHym1SmiknlDZU3KiaVJypvVPymw1oXOax1kcNaF7E/+IdUpoonKlPFE5U3Kr5J5UnFE5WpYlJ5UjGpPKl4Q2Wq+MRhrYsc1rrIYa2L/PAhlaniicpU8URlqnij4g2VT1RMFZPKE5WpYlL5TSr/0mGtixzWushhrYvYH3yRylTxRGWq+CaVJxWTylTxCZWp4g2VqWJSeVLxTSpPKj5xWOsih7UucljrIj98WcWkMlW8oTJVTCr/kspU8UTlScVUMalMFU9UpoonKlPFk4pvOqx1kcNaFzmsdZEfflnFk4pJZaqYVKaKJyrfpPJGxaTyhso3qUwVb1RMKlPFJw5rXeSw1kUOa13khw+pTBWTylTxpGJS+UTFb6qYVKaKJxWTylQxqUwqTyomlScVk8pU8ZsOa13ksNZFDmtdxP7gAyqfqHhDZap4Q+UTFW+oTBWfUJkqnqh8omJSmSq+6bDWRQ5rXeSw1kV++FDFpPJNKlPFpDJVTCpTxaTypOKJylTxhsqTiqniicobFZ9QmSo+cVjrIoe1LnJY6yL2B3+RypOKJypTxaTyRsWk8k0VT1SmijdUporfpPKk4hOHtS5yWOsih7Uu8sOHVJ5UPKmYVJ5UTCpTxaTyRsWkMlU8UXmj4onKVPGGypOKSWWqmComlW86rHWRw1oXOax1kR8+VPFE5YnKk4pJZaqYVKaKN1Smikllqpgqnqg8qfimijcqnqhMFd90WOsih7UucljrIj98SOUTFZPKpDJV/E0qT1SmiknlExVvqHyi4knFpDJVfOKw1kUOa13ksNZFfvhQxTdVvKHyhspU8ZsqnqhMKlPFpPKk4g2VSWWq+JsOa13ksNZFDmtd5IcPqfxNFU8q3lB5UjGpPFH5RMWTiknlicpUcbPDWhc5rHWRw1oX+eHLKr5J5UnFpPKk4hMVk8pU8URlqphUpopPVPymim86rHWRw1oXOax1kR9+mcobFZ+o+CaVJxWTyjepvKHyN6lMFZ84rHWRw1oXOax1kR/+x6lMFZPKVDFVvFExqTxRmSreUJkq3lCZKiaVqeI3Hda6yGGtixzWusgP/3EqTyomlScqb1S8UTGpTCpTxaTyRGWqeENlqphUftNhrYsc1rrIYa2L/PDLKn5TxROVJxVPVKaKNyomlaniicobFZPKk4o3Kn7TYa2LHNa6yGGti/zwZSp/k8pU8QmVqWJSmSp+U8UnKp6oPKl4ojJVfOKw1kUOa13ksNZF7A/WusRhrYsc1rrIYa2LHNa6yGGtixzWushhrYsc1rrIYa2LHNa6yGGtixzWushhrYsc1rrIYa2L/B/8xglU0CcYSQAAAABJRU5ErkJggg==",
+        "createdAt": "2025-02-27T16:24:56.559Z"
+      }
+    ],
+    "approvedAt": "2025-02-24T13:14:44.673Z"
+  },
+  {
+    "id": 2,
+    "name": "Test",
+    "date": "2025-02-28",
+    "time": "12:30",
+    "venue": "AB",
+    "description": "-",
+    "capacity": null,
+    "organizerId": 6,
+    "organizationId": 2,
+    "feeType": "paid",
+    "ticketPrice": 10,
+    "status": "approved",
+    "createdAt": "2025-02-25T11:23:07.815Z",
+    "registrations": [
+      {
+        "id": 3,
+        "eventId": 2,
+        "userId": 5,
+        "qrCode": "data:image/png;base64,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",
+        "createdAt": "2025-02-25T12:13:48.976Z"
+      }
+    ],
+    "approvedAt": "2025-02-25T11:36:13.264Z"
+  },
+  {
+    "id": 3,
+    "name": ".",
+    "date": "2025-02-25",
+    "time": "01:01",
+    "venue": ".",
+    "description": ".",
+    "capacity": null,
+    "organizerId": 2,
+    "organizationId": 1,
+    "feeType": "free",
+    "ticketPrice": 0,
+    "status": "approved",
+    "createdAt": "2025-02-25T11:33:38.255Z",
+    "registrations": [
+      {
+        "id": 2,
+        "eventId": 3,
+        "userId": 3,
+        "qrCode": "data:image/png;base64,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",
+        "createdAt": "2025-02-25T11:35:13.401Z"
+      }
+    ],
+    "approvedAt": "2025-02-25T11:34:14.229Z"
+  }
+]

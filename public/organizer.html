@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evente - Organizer Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=optional" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #4158D0;
+            background-image: linear-gradient(43deg, #4158D0 0%, #C850C0 46%, #FFCC70 100%);
+            background-attachment: fixed;
+        }
+        .event-card {
+            transition: transform 0.2s;
+        }
+        .event-card:hover {
+            transform: translateY(-5px);
+        }
+        .modal-max-height {
+            max-height: calc(100vh - 4rem);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        #scanner-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        #scanner-container:before {
+            content: "";
+            display: block;
+            padding-top: 75%;
+        }
+        #scanner-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 2px solid rgba(0,255,0,0.5);
+            box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);
+            z-index: 2;
+        }
+        #scanner-animation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: rgba(0,255,0,0.8);
+            border-radius: 2px;
+            z-index: 3;
+            animation: scan 2s infinite ease-in-out;
+        }
+        @keyframes scan {
+            0% { top: 0; }
+            50% { top: 100%; }
+            100% { top: 0; }
+        }
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            z-index: 100;
+            transform: translateY(-100px);
+            transition: transform 0.3s ease;
+        }
+        .toast.success {
+            background-color: #10b981;
+        }
+        .toast.error {
+            background-color: #ef4444;
+        }
+        .toast.show {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <!-- Error Toast -->
+    <div id="errorToast" class="toast error">
+        <i class="fas fa-exclamation-circle mr-2"></i>
+        <span id="errorMessage"></span>
+    </div>
+
+    <!-- Success Toast -->
+    <div id="successToast" class="toast success">
+        <i class="fas fa-check-circle mr-2"></i>
+        <span id="successMessage"></span>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="fixed inset-y-0 left-0 w-64 bg-white shadow-lg">
+        <div class="flex items-center p-4 border-b">
+            <i class="fas fa-calendar-alt text-2xl text-indigo-600 mr-2"></i>
+            <span id="organizationName" class="text-xl font-bold text-gray-800">Evente</span>
+        </div>
+        <nav class="mt-6">
+            <a href="#" onclick="showDashboard()" class="flex items-center px-4 py-3 bg-indigo-50 text-indigo-600">
+                <i class="fas fa-home mr-3"></i>
+                Dashboard
+            </a>
+            <a href="#" onclick="showMyEvents()" class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50">
+                <i class="fas fa-calendar-plus mr-3"></i>
+                My Events
+            </a>
+        </nav>
+        <div class="absolute bottom-0 left-0 right-0 p-4 border-t">
+            <div class="flex items-center">
+                <img id="organizerAvatar" class="w-10 h-10 rounded-full mr-3">
+                <div>
+                    <div id="organizerName" class="font-medium text-gray-800"></div>
+                    <div id="organizerEmail" class="text-sm text-gray-500"></div>
+                </div>
+            </div>
+            <button id="logoutBtn" class="w-full mt-4 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">
+                <i class="fas fa-sign-out-alt mr-2"></i>Logout
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="ml-64 p-8">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 id="welcomeMessage" class="text-2xl font-bold text-gray-800" style="color: white;">Welcome!</h1>
+                <p class="text-gray-600" style="color: white;">Manage your events and track registrations</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button onclick="showCreateEventModal()" class="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+                    <i class="fas fa-plus mr-2"></i>
+                    Create Event
+                </button>
+            </div>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboardSection">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white rounded-xl p-6 shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Total Events</p>
+                            <h3 id="totalEvents" class="text-2xl font-bold text-gray-800">-</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-calendar text-indigo-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl p-6 shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Upcoming Events</p>
+                            <h3 id="upcomingEvents" class="text-2xl font-bold text-gray-800">-</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-clock text-purple-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl p-6 shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Pending Approval</p>
+                            <h3 id="pendingEvents" class="text-2xl font-bold text-gray-800">-</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-hourglass-half text-yellow-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl p-6 shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Total Registrations</p>
+                            <h3 id="totalRegistrations" class="text-2xl font-bold text-gray-800">-</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-users text-green-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Events Table -->
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <h2 class="text-xl font-bold mb-4">Recent Events</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="text-left text-gray-500 text-sm border-b">
+                                <th class="pb-4 font-medium">Event Name</th>
+                                <th class="pb-4 font-medium">Date</th>
+                                <th class="pb-4 font-medium">Status</th>
+                                <th class="pb-4 font-medium">Registrations</th>
+                                <th class="pb-4 font-medium">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentEventsTable">
+                            <!-- Recent events will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Events Section -->
+        <div id="myEventsSection" class="hidden">
+            <!-- Events List -->
+            <div class="bg-white rounded-xl p-6 shadow-sm">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-gray-800">My Events</h2>
+                    <div class="flex space-x-4">
+                        <div class="relative">
+                            <input type="text" id="searchInput" placeholder="Search events..." 
+                                class="w-64 px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
+                        </div>
+                        <select id="statusFilter" class="px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="eventsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Events will be loaded here -->
+                </div>
+                <div id="noEventsMessage" class="hidden text-center py-8">
+                    <i class="fas fa-calendar-times text-4xl text-gray-400 mb-4"></i>
+                    <p class="text-gray-600">No events found. Start by creating your first event!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
+    <!-- Create Event Modal -->
+    <div id="createEventModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl p-8 max-w-2xl w-full mx-4 modal-max-height overflow-y-auto custom-scrollbar">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Create New Event</h2>
+                <button onclick="hideCreateEventModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form id="createEventForm" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Event Name *</label>
+                    <input type="text" name="name" required 
+                           class="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-500"
+                           maxlength="100">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Date *</label>
+                        <input type="date" name="date" required 
+                               class="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Time *</label>
+                        <input type="time" name="time" required 
+                               class="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Venue *</label>
+                    <input type="text" name="venue" required 
+                           class="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-500"
+                           maxlength="200">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Description *</label>
+                    <textarea name="description" required 
+                              class="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-500" 
+                              rows="4"
+                              maxlength="1000"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Event Capacity</label>
+                    <input type="number" name="capacity" min="1" 
+                           class="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-500"
+                           placeholder="Leave empty for unlimited capacity">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Event Fee Type *</label>
+                    <div class="flex items-center space-x-4">
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="feeType" value="free" class="form-radio" checked 
+                                   onclick="togglePriceInput(false)">
+                            <span class="ml-2">Free</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="feeType" value="paid" class="form-radio"
+                                   onclick="togglePriceInput(true)">
+                            <span class="ml-2">Paid</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="priceInputContainer" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Ticket Price (₹) *</label>
+                    <input type="number" name="ticketPrice" min="0" step="0.01" 
+                           class="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-500"
+                           placeholder="Enter ticket price">
+                </div>
+
+                <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700">
+                    Create Event
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Event Details Modal -->
+    <div id="eventDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="min-h-screen px-4 text-center">
+            <div class="fixed inset-0 overflow-y-auto">
+                <div class="flex items-center justify-center min-h-screen">
+                    <div class="bg-white rounded-xl w-full max-w-4xl relative modal-max-height overflow-y-auto custom-scrollbar">
+                        <!-- Modal Header -->
+                        <div class="sticky top-0 bg-white p-6 border-b z-10">
+                            <div class="flex justify-between items-center">
+                                <h2 id="eventDetailsTitle" class="text-2xl font-bold text-gray-800"></h2>
+                                <button onclick="hideEventDetailsModal()" class="text-gray-500 hover:text-gray-700">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Event Status Banner -->
+                        <div id="eventStatusBanner" class="px-6 py-3">
+                            <!-- Status banner will be dynamically inserted here -->
+                        </div>
+
+                        <!-- Modal Content -->
+                        <div class="p-6">
+                            <!-- Event Details -->
+                            <div id="eventDetailsContent"></div>
+                            <div class="mt-6">
+                                <button onclick="showScannerModal()" 
+                                        class="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700">
+                                    <i class="fas fa-qrcode mr-2"></i> Scan QR Code
+                                </button>
+                            </div>
+                            <!-- Registrations Section -->
+                            <div class="mt-8">
+                                <h3 class="text-lg font-semibold mb-4">Registrations</h3>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full">
+                                        <thead>
+                                            <tr class="text-left text-gray-500 text-sm border-b">
+                                                <th class="pb-4 font-medium">Name</th>
+                                                <th class="pb-4 font-medium">Email</th>
+                                                <th class="pb-4 font-medium">Registration Date</th>
+                                                <th class="pb-4 font-medium">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="registrationsTableBody">
+                                            <!-- Registrations will be loaded here -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div id="noRegistrationsMessage" class="hidden text-center py-8">
+                                    <i class="fas fa-users text-4xl text-gray-300 mb-3"></i>
+                                    <p class="text-gray-500">No registrations yet for this event.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Scanner Modal -->
+    <div id="qrScannerModal" class="fixed inset-0 bg-black bg-opacity-80 hidden z-50">
+        <div class="min-h-screen px-4 py-8 flex flex-col items-center justify-center">
+            <div class="bg-white rounded-xl w-full max-w-lg relative">
+                <div class="p-6 border-b">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-xl font-bold">Scan Event QR Code</h2>
+                        <button onclick="hideScannerModal()" class="text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="p-6">
+                    <div id="scanner-container" class="mb-6">
+                        <div id="scanner-overlay"></div>
+                        <div id="scanner-animation"></div>
+                        <video id="scanner-video" width="100%" height="100%" style="position: absolute; top: 0; left: 0;"></video>
+                        <canvas id="scanner-canvas" width="400" height="300" style="display: none;"></canvas>
+                    </div>
+                    
+                    <div id="scanner-message" class="text-center text-gray-600 mb-4">
+                        Position the QR code within the frame to scan
+                    </div>
+                    
+                    <div id="scan-result" class="hidden mb-6 p-4 rounded-lg">
+                        <!-- Scan result will be shown here -->
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <button onclick="toggleFlash()" id="flashButton" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">
+                            <i class="fas fa-bolt mr-2"></i>Flash
+                        </button>
+                        <button onclick="hideScannerModal()" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                            Done
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Confirmation Modal -->
+    <div id="attendanceModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full">
+            <div id="attendanceContent">
+                <!-- Content will be dynamically filled -->
+            </div>
+            <div class="mt-6 flex justify-end">
+                <button onclick="hideAttendanceModal()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Authentication check
+        const organizerData = JSON.parse(localStorage.getItem('user'));
+        if (!organizerData || organizerData.role !== 'organizer') {
+            window.location.href = '/index.html';
+        }
+
+        let events = [];
+        let organization = null;
+        let currentEventId = null;
+        let scanner = null;
+        let videoStream = null;
+
+        // Initialize UI
+        async function initializeUI() {
+            try {
+                // Set minimum date for event creation to today
+                const today = new Date().toISOString().split('T')[0];
+                document.querySelector('input[name="date"]').min = today;
+
+                // Fetch organization data
+                const response = await fetch('/api/organizations');
+                const data = await response.json();
+                organization = data.organizations.find(org => org.id === organizerData.organizationId);
+                
+                if (organization) {
+                    document.getElementById('organizationName').textContent = organization.name;
+                    document.title = `${organization.name} - Organizer Dashboard`;
+                }
+
+                // Set user info
+                document.getElementById('organizerAvatar').src = `https://ui-avatars.com/api/?name=${organizerData.firstName}+${organizerData.lastName}`;
+                document.getElementById('organizerName').textContent = `${organizerData.firstName} ${organizerData.lastName}`;
+                document.getElementById('organizerEmail').textContent = organizerData.email;
+                document.getElementById('welcomeMessage').textContent = `Welcome, ${organizerData.firstName}!`;
+
+                await loadDashboard();
+            } catch (error) {
+                showError('Failed to initialize dashboard');
+                console.error('Error initializing UI:', error);
+            }
+        }
+
+        // Load dashboard data
+        async function loadDashboard() {
+            try {
+                // Fetch all events created by this organizer
+                const eventsResponse = await fetch(`/api/events?organizerId=${organizerData.id}&organizationId=${organizerData.organizationId}`);
+                if (!eventsResponse.ok) throw new Error('Failed to fetch events');
+                const eventsData = await eventsResponse.json();
+                events = eventsData.events || [];
+
+                // Calculate stats
+                const currentDate = new Date();
+                const stats = {
+                    totalEvents: events.length,
+                    upcomingEvents: events.filter(e => new Date(e.date) > currentDate && e.status === 'approved').length,
+                    pendingEvents: events.filter(e => e.status === 'pending').length,
+                    totalRegistrations: events.reduce((sum, event) => sum + (event.registrations?.length || 0), 0)
+                };
+
+                // Update stats display
+                document.getElementById('totalEvents').textContent = stats.totalEvents;
+                document.getElementById('upcomingEvents').textContent = stats.upcomingEvents;
+                document.getElementById('pendingEvents').textContent = stats.pendingEvents;
+                document.getElementById('totalRegistrations').textContent = stats.totalRegistrations;
+
+                // Render recent events
+                renderRecentEvents();
+
+                // If on my events section, update the events list
+                if (!document.getElementById('myEventsSection').classList.contains('hidden')) {
+                    renderMyEvents();
+                }
+            } catch (error) {
+                showError('Failed to load dashboard');
+                console.error('Error loading dashboard:', error);
+            }
+        }
+
+        // Render recent events in the dashboard
+        function renderRecentEvents() {
+            const tableBody = document.getElementById('recentEventsTable');
+            const recentEvents = [...events]
+                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                .slice(0, 5);
+
+            tableBody.innerHTML = recentEvents.map(event => `
+                <tr class="border-b">
+                    <td class="py-4">${event.name}</td>
+                    <td class="py-4">${new Date(event.date).toLocaleDateString()}</td>
+                    <td class="py-4">
+                        <span class="px-3 py-1 rounded-full text-sm ${
+                            event.status === 'approved' ? 'bg-green-100 text-green-600' : 
+                            event.status === 'rejected' ? 'bg-red-100 text-red-600' :
+                            'bg-yellow-100 text-yellow-600'
+                        }">
+                            ${event.status.charAt(0).toUpperCase() + event.status.slice(1)}
+                        </span>
+                    </td>
+                    <td class="py-4">${event.registrations?.length || 0}</td>
+                    <td class="py-4">
+                        <button onclick="showEventDetails(${event.id})" 
+                                class="text-indigo-600 hover:text-indigo-800">
+                            <i class="fas fa-eye mr-1"></i> View
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Render my events
+        function renderMyEvents() {
+            const eventsContainer = document.getElementById('eventsContainer');
+            const noEventsMessage = document.getElementById('noEventsMessage');
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+
+            const filteredEvents = events.filter(event => {
+                const matchesSearch = event.name.toLowerCase().includes(searchTerm);
+                const matchesStatus = !statusFilter || event.status === statusFilter;
+                return matchesSearch && matchesStatus;
+            });
+
+            if (filteredEvents.length === 0) {
+                eventsContainer.innerHTML = '';
+                noEventsMessage.classList.remove('hidden');
+            } else {
+                noEventsMessage.classList.add('hidden');
+                eventsContainer.innerHTML = filteredEvents.map(event => `
+                    <div class="event-card bg-white rounded-xl shadow-sm p-6">
+                        <h3 class="text-lg font-semibold mb-2">${event.name}</h3>
+                        <div class="text-sm text-gray-600 mb-4">
+                            <p><i class="fas fa-calendar mr-2"></i>${new Date(event.date).toLocaleDateString()}</p>
+                            <p><i class="fas fa-map-marker-alt mr-2"></i>${event.venue}</p>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="px-3 py-1 rounded-full text-sm ${
+                                event.status === 'approved' ? 'bg-green-100 text-green-600' : 
+                                event.status === 'rejected' ? 'bg-red-100 text-red-600' :
+                                'bg-yellow-100 text-yellow-600'
+                            }">
+                                ${event.status.charAt(0).toUpperCase() + event.status.slice(1)}
+                            </span>
+                            <button onclick="showEventDetails(${event.id})" 
+                                    class="text-indigo-600 hover:text-indigo-800">
+                                View Details
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Show event details
+        async function showEventDetails(eventId) {
+            try {
+                currentEventId = eventId;
+                const event = events.find(e => e.id === eventId);
+                if (!event) throw new Error('Event not found');
+
+                // Fetch registrations for this event
+                const registrationsResponse = await fetch(`/api/events/${eventId}/registrations`);
+                const registrationsData = await registrationsResponse.json();
+
+                // Update modal title
+                document.getElementById('eventDetailsTitle').textContent = event.name;
+
+                // Update status banner
+                const statusBanner = document.getElementById('eventStatusBanner');
+                statusBanner.innerHTML = `
+                    <div class="flex items-center justify-between px-4 py-2 ${
+                        event.status === 'approved' ? 'bg-green-100 text-green-800' : 
+                        event.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                        'bg-yellow-100 text-yellow-800'
+                    }">
+                        <span>Status: ${event.status.charAt(0).toUpperCase() + event.status.slice(1)}</span>
+                    </div>
+                `;
+
+                // Update event details content
+                const detailsContent = document.getElementById('eventDetailsContent');
+                detailsContent.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <h3 class="font-semibold text-gray-700">Date & Time</h3>
+                            <p class="text-gray-600">${new Date(event.date).toLocaleDateString()} at ${event.time}</p>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-700">Venue</h3>
+                            <p class="text-gray-600">${event.venue}</p>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-700">Fee Type</h3>
+                            <p class="text-gray-600">${event.feeType === 'paid' ? `Paid (₹${event.ticketPrice})` : 'Free'}</p>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-700">Capacity</h3>
+                            <p class="text-gray-600">${event.capacity ? event.capacity : 'Unlimited'}</p>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-700 mb-2">Description</h3>
+                        <p class="text-gray-600">${event.description}</p>
+                    </div>
+                `;
+
+                // Update registrations table
+                const registrationsTableBody = document.getElementById('registrationsTableBody');
+                const noRegistrationsMessage = document.getElementById('noRegistrationsMessage');
+
+                if (registrationsData.registrations.length === 0) {
+                    registrationsTableBody.innerHTML = '';
+                    noRegistrationsMessage.classList.remove('hidden');
+                } else {
+                    noRegistrationsMessage.classList.add('hidden');
+                    registrationsTableBody.innerHTML = registrationsData.registrations.map(reg => `
+                        <tr class="border-b">
+                            <td class="py-4">${reg.firstName} ${reg.lastName}</td>
+                            <td class="py-4">${reg.email}</td>
+                            <td class="py-4">${new Date(reg.createdAt).toLocaleDateString()}</td>
+                            <td class="py-4">
+                                <span class="px-3 py-1 bg-green-100 text-green-600 rounded-full text-sm">
+                                    Registered
+                                </span>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+
+                // Show modal
+                document.getElementById('eventDetailsModal').classList.remove('hidden');
+            } catch (error) {
+                showError('Failed to load event details');
+                console.error('Error loading event details:', error);
+            }
+        }
+
+        // QR Scanner functionality
+        async function showScannerModal() {
+            if (currentEventId) {
+                const event = events.find(e => e.id === currentEventId);
+                
+                if (event && event.status === 'approved') {
+                    document.getElementById('qrScannerModal').classList.remove('hidden');
+                    document.getElementById('scan-result').classList.add('hidden');
+                    startScanner();
+                } else {
+                    showError('You can only scan QR codes for approved events');
+                }
+            } else {
+                showError('No event selected');
+            }
+        }
+
+        function hideScannerModal() {
+            document.getElementById('qrScannerModal').classList.add('hidden');
+            stopScanner();
+        }
+
+        function hideAttendanceModal() {
+            document.getElementById('attendanceModal').classList.add('hidden');
+        }
+
+        async function startScanner() {
+            try {
+                const video = document.getElementById('scanner-video');
+                const canvas = document.getElementById('scanner-canvas');
+                const context = canvas.getContext('2d');
+                
+                const constraints = {
+                    video: {
+                        facingMode: 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                };
+                
+                videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = videoStream;
+                
+                // Wait for the video to start playing
+                await new Promise((resolve) => {
+                    video.onloadedmetadata = () => {
+                        video.play();
+                        resolve();
+                    };
+                });
+                
+                // Start scanning
+                scanQRCode(video, canvas, context);
+                
+            } catch (error) {
+                console.error('Error starting scanner:', error);
+                showError('Failed to start camera. Please ensure camera permissions are granted.');
+            }
+        }
+
+        function stopScanner() {
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                videoStream = null;
+            }
+        }
+
+        function scanQRCode(video, canvas, context) {
+            if (!video.paused) {
+                // Draw the current video frame to the canvas
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                // Get the image data from the canvas
+                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                
+                // Use jsQR to try to find a QR code in the image
+                const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                    inversionAttempts: "dontInvert",
+                });
+                
+                if (code) {
+                    // QR code found
+                    processQRCode(code.data);
+                } else {
+                    // Continue scanning
+                    requestAnimationFrame(() => scanQRCode(video, canvas, context));
+                }
+            }
+        }
+
+        async function processQRCode(qrData) {
+            try {
+                document.getElementById('scanner-message').textContent = "Processing QR code...";
+                
+                // Send to server for verification
+                const response = await fetch('/api/verify-qr', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        qrData: qrData,
+                        eventId: currentEventId
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Success
+                    stopScanner();
+                    showAttendanceConfirmation(result.attendanceInfo);
+                } else {
+                    // Error
+                    const errorResult = document.getElementById('scan-result');
+                    errorResult.innerHTML = `
+                        <div class="bg-red-100 text-red-700 p-4 rounded-lg">
+                            <i class="fas fa-exclamation-circle mr-2"></i>
+                            ${result.error}
+                        </div>
+                    `;
+                    errorResult.classList.remove('hidden');
+                    
+                    // Continue scanning after delay
+                    setTimeout(() => {
+                        document.getElementById('scanner-message').textContent = "Position the QR code within the frame to scan";
+                        if (videoStream && videoStream.active) {
+                            const video = document.getElementById('scanner-video');
+                            const canvas = document.getElementById('scanner-canvas');
+                            const context = canvas.getContext('2d');
+                            scanQRCode(video, canvas, context);
+                        }
+                    }, 3000);
+                }
+            } catch (error) {
+                console.error('Error processing QR code:', error);
+                showError('Failed to process QR code');
+                
+                // Continue scanning after delay
+                setTimeout(() => {
+                    document.getElementById('scanner-message').textContent = "Position the QR code within the frame to scan";
+                    if (videoStream && videoStream.active) {
+                        const video = document.getElementById('scanner-video');
+                        const canvas = document.getElementById('scanner-canvas');
+                        const context = canvas.getContext('2d');
+                        scanQRCode(video, canvas, context);
+                    }
+                }, 3000);
+            }
+        }
+
+        function showAttendanceConfirmation(attendanceInfo) {
+            // Hide scanner modal
+            document.getElementById('qrScannerModal').classList.add('hidden');
+            
+            // Show attendance confirmation
+            const attendanceContent = document.getElementById('attendanceContent');
+            
+            if (attendanceInfo.alreadyAttended) {
+                attendanceContent.innerHTML = `
+                    <div class="text-center">
+                        <div class="bg-yellow-100 text-yellow-700 p-4 rounded-lg mb-4">
+                            <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
+                            <p>Attendee has already been checked in!</p>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold">${attendanceInfo.firstName} ${attendanceInfo.lastName}</h3>
+                        </div>
+                    </div>
+                `;
+            } else {
+                attendanceContent.innerHTML = `
+                    <div class="text-center">
+                        <div class="bg-green-100 text-green-700 p-4 rounded-lg mb-4">
+                            <i class="fas fa-check-circle text-4xl mb-2"></i>
+                            <p>Attendance confirmed!</p>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold">${attendanceInfo.firstName} ${attendanceInfo.lastName}</h3>
+                            <p class="text-gray-600">${attendanceInfo.email}</p>
+                            <p class="text-sm text-gray-500 mt-2">Checked in: ${new Date(attendanceInfo.timestamp).toLocaleTimeString()}</p>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('attendanceModal').classList.remove('hidden');
+        }
+
+        function toggleFlash() {
+            if (videoStream) {
+                const track = videoStream.getVideoTracks()[0];
+                if (track.getCapabilities().torch) {
+                    const flashButton = document.getElementById('flashButton');
+                    const currentState = track.getConstraints().advanced?.find(c => c.torch)?.torch;
+                    track.applyConstraints({
+                        advanced: [{ torch: !currentState }]
+                    }).then(() => {
+                        if (!currentState) {
+                            flashButton.classList.remove('bg-gray-200', 'text-gray-800');
+                            flashButton.classList.add('bg-yellow-500', 'text-white');
+                        } else {
+                            flashButton.classList.remove('bg-yellow-500', 'text-white');
+                            flashButton.classList.add('bg-gray-200', 'text-gray-800');
+                        }
+                    });
+                } else {
+                    showError('Torch not available on this device');
+                }
+            }
+        }
+
+        // Navigation functions
+        function showDashboard() {
+            document.getElementById('dashboardSection').classList.remove('hidden');
+            document.getElementById('myEventsSection').classList.add('hidden');
+            document.querySelectorAll('nav a').forEach(link => {
+                if (link.textContent.trim() === 'Dashboard') {
+                    link.classList.add('bg-indigo-50', 'text-indigo-600');
+                    link.classList.remove('text-gray-600');
+                } else {
+                    link.classList.remove('bg-indigo-50', 'text-indigo-600');
+                    link.classList.add('text-gray-600');
+                }
+            });
+        }
+
+        function showMyEvents() {
+            document.getElementById('dashboardSection').classList.add('hidden');
+            document.getElementById('myEventsSection').classList.remove('hidden');
+            document.querySelectorAll('nav a').forEach(link => {
+                if (link.textContent.trim() === 'My Events') {
+                    link.classList.add('bg-indigo-50', 'text-indigo-600');
+                    link.classList.remove('text-gray-600');
+                } else {
+                    link.classList.remove('bg-indigo-50', 'text-indigo-600');
+                    link.classList.add('text-gray-600');
+                }
+            });
+            renderMyEvents();
+        }
+
+        // Modal control functions
+        function showCreateEventModal() {
+            document.getElementById('createEventModal').classList.remove('hidden');
+        }
+
+        function hideCreateEventModal() {
+            document.getElementById('createEventModal').classList.add('hidden');
+            document.getElementById('createEventForm').reset();
+            togglePriceInput(false);
+        }
+
+        function hideEventDetailsModal() {
+            document.getElementById('eventDetailsModal').classList.add('hidden');
+            currentEventId = null;
+        }
+
+        // Toggle price input in create event form
+        function togglePriceInput(show) {
+            const priceContainer = document.getElementById('priceInputContainer');
+            const priceInput = document.querySelector('input[name="ticketPrice"]');
+            
+            if (show) {
+                priceContainer.classList.remove('hidden');
+                priceInput.required = true;
+            } else {
+                priceContainer.classList.add('hidden');
+                priceInput.required = false;
+                priceInput.value = '';
+            }
+        }
+
+        // Create event form handling
+        document.getElementById('createEventForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            try {
+                const formData = new FormData(e.target);
+                const eventData = {
+                    name: formData.get('name'),
+                    date: formData.get('date'),
+                    time: formData.get('time'),
+                    venue: formData.get('venue'),
+                    description: formData.get('description'),
+                    capacity: formData.get('capacity') ? parseInt(formData.get('capacity')) : null,
+                    organizerId: organizerData.id,
+                    organizationId: organizerData.organizationId,
+                    feeType: formData.get('feeType'),
+                    ticketPrice: formData.get('feeType') === 'paid' ? parseFloat(formData.get('ticketPrice')) : 0
+                };
+
+                const response = await fetch('/api/events', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(eventData)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to create event');
+                }
+
+                // Reset form and hide modal
+                e.target.reset();
+                hideCreateEventModal();
+                
+                // Show success message
+                showSuccess('Event created successfully! Waiting for admin approval.');
+
+                // Refresh the dashboard
+                await loadDashboard();
+            } catch (error) {
+                showError('Failed to create event');
+                console.error('Error creating event:', error);
+            }
+        });
+
+        // Helper functions for notifications
+        function showSuccess(message) {
+            const toast = document.getElementById('successToast');
+            document.getElementById('successMessage').textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function showError(message) {
+            const toast = document.getElementById('errorToast');
+            document.getElementById('errorMessage').textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Event listeners for search and filter
+        document.getElementById('searchInput').addEventListener('input', renderMyEvents);
+        document.getElementById('statusFilter').addEventListener('change', renderMyEvents);
+
+        // Logout handler
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('user');
+            window.location.href = '/index.html';
+        });
+
+        // Initialize app
+        initializeUI();
+        setInterval(loadDashboard, 30000); // Refresh dashboard every 30 seconds
+    </script>
+</body>
+</html>

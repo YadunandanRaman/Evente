@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evente - Modern Internal Event Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=optional" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        .hero-pattern {
+            background-color: #4158D0;
+            background-image: linear-gradient(43deg, #4158D0 0%, #C850C0 46%, #FFCC70 100%);
+        }
+        .section-heading::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, #4158D0, #C850C0);
+            margin: 20px auto 0;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- First Time Setup Modal -->
+    <div id="setupModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl p-8 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">Setup Your Organization</h2>
+                <button onclick="hideSetupModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="setupForm" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Organization Name</label>
+                    <input type="text" id="orgName" required 
+                           class="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Organization Type</label>
+                    <select id="orgType" required 
+                            class="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-500">
+                        <option value="educational">Educational Institution</option>
+                        <option value="corporate">Corporate Organization</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700">
+                    Create Organization
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="min-h-screen">
+        <!-- Hero Section -->
+        <div class="hero-pattern min-h-screen flex flex-col">
+            <nav class="glass-effect px-6 py-4">
+                <div class="max-w-7xl mx-auto flex justify-between items-center">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-calendar-alt text-2xl text-indigo-600"></i>
+                        <span class="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 text-transparent bg-clip-text">Evente</span>
+                    </div>
+                    <div class="hidden md:flex space-x-6">
+                        <a href="#features" class="text-gray-700 hover:text-indigo-600">Features</a>
+                        <a href="#about" class="text-gray-700 hover:text-indigo-600">About</a>
+                        <a href="#contact" class="text-gray-700 hover:text-indigo-600">Contact</a>
+                    </div>
+                </div>
+            </nav>
+            <div class="container mx-auto px-4 py-12 flex-1 flex items-center">
+                <div class="flex flex-col md:flex-row items-center justify-between">
+                    <div class="md:w-1/2 text-white mb-8 md:mb-0">
+                        <h1 class="text-4xl md:text-6xl font-bold mb-6">
+                            Create & Manage Events with Ease
+                        </h1>
+                        <p class="text-xl mb-8 opacity-90">
+                            The all-in-one platform for seamless event management, registration, and attendance tracking.
+                        </p>
+                        <div class="flex flex-row items-center space-x-4">
+                            <button onclick="showLoginModal()" class="bg-white text-indigo-600 px-6 py-3 rounded-full font-semibold hover:bg-opacity-90 transition duration-300">
+                                Sign In
+                            </button>
+                            <button onclick="showRegisterModal()" class="bg-transparent border-2 border-white text-white px-6 py-3 rounded-full font-semibold hover:bg-white hover:text-indigo-600 transition duration-300">
+                                Get Started
+                            </button>
+                            <button onclick="showSetupModal()" class="bg-transparent border-2 border-white text-white px-6 py-3 rounded-full font-semibold hover:bg-green-600 hover:border-green-600 transition duration-300">
+                                Setup Organization
+                            </button>
+                        </div>
+                    </div>
+                    <div class="md:w-1/2 flex justify-center">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Section -->
+        <div id="features" class="py-20 bg-white">
+            <div class="max-w-7xl mx-auto px-4">
+                <h2 class="text-3xl font-bold text-center mb-12 section-heading">Why Choose Evente?</h2>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="p-6 rounded-xl bg-gray-50 hover:shadow-lg transition duration-300">
+                        <i class="fas fa-qrcode text-4xl text-indigo-600 mb-4"></i>
+                        <h3 class="text-xl font-semibold mb-2">QR Code Check-in</h3>
+                        <p class="text-gray-600">Seamless attendance tracking with our advanced QR code system. Organizers can scan participants' QR codes for instant check-in.</p>
+                    </div>
+                    <div class="p-6 rounded-xl bg-gray-50 hover:shadow-lg transition duration-300">
+                        <i class="fas fa-chart-line text-4xl text-indigo-600 mb-4"></i>
+                        <h3 class="text-xl font-semibold mb-2">Real-time Analytics</h3>
+                        <p class="text-gray-600">Track attendance, engagement, and event performance in real-time. Make data-driven decisions for future events.</p>
+                    </div>
+                    <div class="p-6 rounded-xl bg-gray-50 hover:shadow-lg transition duration-300">
+                        <i class="fas fa-users text-4xl text-indigo-600 mb-4"></i>
+                        <h3 class="text-xl font-semibold mb-2">Community Building</h3>
+                        <p class="text-gray-600">Connect with attendees and build lasting relationships. Foster a sense of community within your organization.</p>
+                    </div>
+                    <div class="p-6 rounded-xl bg-gray-50 hover:shadow-lg transition duration-300">
+                        <i class="fas fa-shield-alt text-4xl text-indigo-600 mb-4"></i>
+                        <h3 class="text-xl font-semibold mb-2">Role-Based Access</h3>
+                        <p class="text-gray-600">Secure platform with different access levels for admins, organizers, students, and employees. Everyone has appropriate permissions.</p>
+                    </div>
+                    <div class="p-6 rounded-xl bg-gray-50 hover:shadow-lg transition duration-300">
+                        <i class="fas fa-mobile-alt text-4xl text-indigo-600 mb-4"></i>
+                        <h3 class="text-xl font-semibold mb-2">Mobile Friendly</h3>
+                        <p class="text-gray-600">Access Evente from any device. Our responsive design ensures a seamless experience on desktops, tablets, and smartphones.</p>
+                    </div>
+                    <div class="p-6 rounded-xl bg-gray-50 hover:shadow-lg transition duration-300">
+                        <i class="fas fa-check-circle text-4xl text-indigo-600 mb-4"></i>
+                        <h3 class="text-xl font-semibold mb-2">Easy Approval System</h3>
+                        <p class="text-gray-600">Streamlined approval process for events and organizers. Admins can quickly review and approve submissions.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- About Section -->
+        <div id="about" class="py-20 bg-gray-50">
+            <div class="max-w-7xl mx-auto px-4">
+                <h2 class="text-3xl font-bold text-center mb-12 section-heading">About Evente</h2>
+                
+                <div class="grid md:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h3 class="text-2xl font-semibold mb-4 text-indigo-600">Our Mission</h3>
+                        <p class="text-gray-700 mb-6">
+                            Evente was created to simplify event management within organizations. We believe that bringing people together should be simple and stress-free, allowing organizations to focus on creating memorable experiences rather than dealing with administrative headaches.
+                        </p>
+                        
+                        <h3 class="text-2xl font-semibold mb-4 text-indigo-600">Who We Serve</h3>
+                        <p class="text-gray-700 mb-6">
+                            Our platform is designed for both educational institutions and corporate organizations. Whether you're managing campus events, workshops, seminars, or company gatherings, Evente provides the tools you need to succeed.
+                        </p>
+                        
+                        <div class="flex items-center mb-8">
+                            <div class="w-px h-8 bg-indigo-600 mr-4"></div>
+                            <p class="text-xl italic text-indigo-800">
+                                "Bringing people together through seamless event management."
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <div class="text-3xl font-bold text-indigo-600 mb-2">500+</div>
+                            <p class="text-gray-600">Events Managed</p>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <div class="text-3xl font-bold text-indigo-600 mb-2">50+</div>
+                            <p class="text-gray-600">Organizations</p>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <div class="text-3xl font-bold text-indigo-600 mb-2">10K+</div>
+                            <p class="text-gray-600">Attendees</p>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <div class="text-3xl font-bold text-indigo-600 mb-2">98%</div>
+                            <p class="text-gray-600">Satisfaction Rate</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-16">
+                    <h3 class="text-2xl font-semibold mb-6 text-center">How It Works</h3>
+                    <div class="flex flex-col md:flex-row justify-between items-start">
+                        <div class="flex flex-col items-center text-center mb-8 md:mb-0">
+                            <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
+                                <span class="text-xl font-bold text-indigo-600">1</span>
+                            </div>
+                            <h4 class="text-lg font-semibold mb-2">Setup</h4>
+                            <p class="text-gray-600 max-w-xs">Create your organization and add users with different roles</p>
+                        </div>
+                        <div class="hidden md:block w-16 h-1 bg-gray-200 mt-8"></div>
+                        <div class="flex flex-col items-center text-center mb-8 md:mb-0">
+                            <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
+                                <span class="text-xl font-bold text-indigo-600">2</span>
+                            </div>
+                            <h4 class="text-lg font-semibold mb-2">Create Events</h4>
+                            <p class="text-gray-600 max-w-xs">Organizers can create and submit events for approval</p>
+                        </div>
+                        <div class="hidden md:block w-16 h-1 bg-gray-200 mt-8"></div>
+                        <div class="flex flex-col items-center text-center mb-8 md:mb-0">
+                            <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
+                                <span class="text-xl font-bold text-indigo-600">3</span>
+                            </div>
+                            <h4 class="text-lg font-semibold mb-2">Register</h4>
+                            <p class="text-gray-600 max-w-xs">Users register for events and receive QR code passes</p>
+                        </div>
+                        <div class="hidden md:block w-16 h-1 bg-gray-200 mt-8"></div>
+                        <div class="flex flex-col items-center text-center">
+                            <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
+                                <span class="text-xl font-bold text-indigo-600">4</span>
+                            </div>
+                            <h4 class="text-lg font-semibold mb-2">Attend</h4>
+                            <p class="text-gray-600 max-w-xs">Scan QR codes for seamless check-in and attendance tracking</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Section -->
+        <div id="contact" class="py-20 bg-white">
+            <div class="max-w-7xl mx-auto px-4">
+                <h2 class="text-3xl font-bold text-center mb-12 section-heading">Get In Touch</h2>
+                
+                <div class="grid md:grid-cols-2 gap-12">
+                    <div>
+                        <h3 class="text-2xl font-semibold mb-6 text-indigo-600">Contact Us</h3>
+                        <p class="text-gray-700 mb-8">
+                            Have questions about Evente? We're here to help! Fill out the form and our team will get back to you as soon as possible.
+                        </p>
+                        
+                        <div class="space-y-6">
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <i class="fas fa-envelope text-indigo-600"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold mb-1">Email Us</h4>
+                                    <p class="text-gray-600">support@evente.example.com</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <i class="fas fa-phone-alt text-indigo-600"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold mb-1">Call Us</h4>
+                                    <p class="text-gray-600">+91 XXXXX XXX00</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <i class="fas fa-map-marker-alt text-indigo-600"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold mb-1">Location</h4>
+                                    <p class="text-gray-600">Shiv Nadar University, Chennai-603110</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <form class="bg-gray-50 rounded-xl p-8 shadow-sm">
+                            <div class="mb-6">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Your Name</label>
+                                <input type="text" class="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            
+                            <div class="mb-6">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                                <input type="email" class="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            
+                            <div class="mb-6">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+                                <input type="text" class="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            
+                            <div class="mb-6">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Message</label>
+                                <textarea rows="4" class="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-500"></textarea>
+                            </div>
+                            
+                            <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition duration-300">
+                                Send Message
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <footer class="bg-gray-800 text-white py-12">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="grid md:grid-cols-4 gap-8">
+                    <div>
+                        <div class="flex items-center space-x-2 mb-4">
+                            <i class="fas fa-calendar-alt text-2xl text-indigo-400"></i>
+                            <span class="text-xl font-bold">Evente</span>
+                        </div>
+                        <p class="text-gray-400 mb-4">
+                            The complete solution for event management within organizations.
+                        </p>
+                        <div class="flex space-x-4">
+                            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-facebook-f"></i></a>
+                            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter"></i></a>
+                            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram"></i></a>
+                            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-linkedin-in"></i></a>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-lg font-semibold mb-4">Quick Links</h4>
+                        <ul class="space-y-2 text-gray-400">
+                            <li><a href="#" class="hover:text-white">Home</a></li>
+                            <li><a href="#features" class="hover:text-white">Features</a></li>
+                            <li><a href="#about" class="hover:text-white">About Us</a></li>
+                            <li><a href="#contact" class="hover:text-white">Contact</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-lg font-semibold mb-4">Support</h4>
+                        <ul class="space-y-2 text-gray-400">
+                            <li><a href="#" class="hover:text-white">Help Center</a></li>
+                            <li><a href="#" class="hover:text-white">FAQs</a></li>
+                            <li><a href="#" class="hover:text-white">Privacy Policy</a></li>
+                            <li><a href="#" class="hover:text-white">Terms of Service</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-lg font-semibold mb-4">Newsletter</h4>
+                        <p class="text-gray-400 mb-4">
+                            Subscribe to our newsletter for the latest updates.
+                        </p>
+                        <form class="flex">
+                            <input type="email" placeholder="Your email" 
+                                class="px-4 py-2 rounded-l-lg bg-gray-700 text-white border-0 focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full">
+                            <button type="submit" class="bg-indigo-600 px-4 py-2 rounded-r-lg hover:bg-indigo-700">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="border-t border-gray-700 mt-12 pt-8 text-center text-gray-400">
+                    <p>&copy; 2025 Evente. All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Auth Modal -->
+    <div id="authModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="modalTitle" class="text-2xl font-bold text-gray-800"></h2>
+                <button onclick="hideAuthModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form id="authForm" class="space-y-6">
+                <div id="nameFields" class="hidden space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+                        <input type="text" id="firstName" 
+                            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+                        <input type="text" id="lastName" 
+                            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <input type="email" id="email" required
+                        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <input type="password" id="password" required
+                        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500">
+                </div>
+
+                <div id="organizationContainer">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Organization</label>
+                    <select id="organization" 
+                            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500">
+                        <option value="">Select Organization</option>
+                    </select>
+                </div>
+
+                <div id="roleContainer">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">I am a</label>
+                    <select id="role" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500">
+                    </select>
+                </div> 
+
+                <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition duration-300">
+                    <span id="submitBtnText"></span>
+                </button>
+            </form>
+
+            <div class="mt-6 text-center">
+                <p class="text-gray-600">
+                    <span id="switchText"></span>
+                    <button onclick="toggleAuthMode()" class="text-indigo-600 font-semibold hover:text-indigo-800 ml-1">
+                        <span id="switchBtnText"></span>
+                    </button>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isLogin = true;
+        let organizations = [];
+
+        // Modal control functions
+        function showSetupModal() {
+            document.getElementById('setupModal').classList.remove('hidden');
+        }
+
+        function hideSetupModal() {
+            document.getElementById('setupModal').classList.add('hidden');
+        }
+
+        function showLoginModal() {
+            isLogin = true;
+            updateAuthModal();
+            document.getElementById('authModal').classList.remove('hidden');
+        }
+
+        function showRegisterModal() {
+            isLogin = false;
+            updateAuthModal();
+            document.getElementById('authModal').classList.remove('hidden');
+        }
+
+        function hideAuthModal() {
+            document.getElementById('authModal').classList.add('hidden');
+            document.getElementById('authForm').reset();
+        }
+
+        function toggleAuthMode() {
+            isLogin = !isLogin;
+            updateAuthModal();
+        }
+
+        // Load organizations
+        async function loadOrganizations() {
+            try {
+                const response = await fetch('/api/organizations');
+                const data = await response.json();
+                organizations = data.organizations;
+                updateOrganizationSelect();
+            } catch (error) {
+                console.error('Error loading organizations:', error);
+            }
+        }
+
+        function updateOrganizationSelect() {
+            const select = document.getElementById('organization');
+            select.innerHTML = '<option value="">Select Organization</option>' +
+                organizations.map(org => `
+                    <option value="${org.id}">${org.name}</option>
+                `).join('');
+        }
+
+        function updateRoleSelect(organizationType) {
+            const select = document.getElementById('role');
+            const options = organizationType === 'educational' ? 
+                [
+                    ['student', 'Student'],
+                    ['organizer', 'Event Organizer']
+                ] : 
+                [
+                    ['employee', 'Employee'],
+                    ['organizer', 'Event Organizer']
+                ];
+            
+            select.innerHTML = options.map(([value, label]) => 
+                `<option value="${value}">${label}</option>`
+            ).join('');
+        }
+
+        function updateAuthModal() {
+            document.getElementById('modalTitle').textContent = isLogin ? 'Welcome Back!' : 'Create Account';
+            document.getElementById('submitBtnText').textContent = isLogin ? 'Sign In' : 'Create Account';
+            document.getElementById('switchText').textContent = isLogin ? "Don't have an account?" : 'Already have an account?';
+            document.getElementById('switchBtnText').textContent = isLogin ? 'Sign Up' : 'Sign In';
+            
+            // Show/hide fields based on mode
+             if(document.getElementById('nameFields')) document.getElementById('nameFields').style.display = isLogin ? 'none' : 'block';
+             if(document.getElementById('organizationContainer')) document.getElementById('organizationContainer').style.display = isLogin ? 'none' : 'block';
+            if(document.getElementById('roleContainer')) document.getElementById('roleContainer').style.display = isLogin ? 'none' : 'block';
+            
+            // Clear form
+            document.getElementById('authForm').reset();
+        }
+
+        // Setup form handling
+        document.getElementById('setupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('orgName').value;
+            const type = document.getElementById('orgType').value;
+
+            try {
+                const response = await fetch('/api/organizations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name, type })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert(`Organization created successfully!\n\nAdmin credentials:\nEmail: ${data.adminCredentials.email}\nPassword: ${data.adminCredentials.password}\n\nPlease save these credentials.`);
+                    hideSetupModal();
+                    loadOrganizations();
+                } else {
+                    alert(data.error || 'Failed to create organization');
+                }
+            } catch (error) {
+                console.error('Error creating organization:', error);
+                alert('Failed to create organization');
+            }
+        });
+
+        // Auth form handling
+        document.getElementById('authForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (isLogin) {
+                // Login flow
+                try {
+                    const email = document.getElementById('email').value;
+                    const password = document.getElementById('password').value;
+
+                    if (!email || !password) {
+                        alert('Please enter both email and password');
+                        return;
+                    }
+
+                    const response = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            email: email,
+                            password: password
+                        }),
+                    });
+
+                    const data = await response.json();
+
+                    if (!data.success) {
+                        alert(data.error || 'Login failed');
+                        return;
+                    }
+
+                    // Store user data and redirect
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    
+                    // Redirect based on role
+                    switch (data.user.role) {
+                        case 'admin':
+                            window.location.href = '/admin.html';
+                            break;
+                        case 'organizer':
+                            window.location.href = '/organizer.html';
+                            break;
+                        case 'student':
+                            window.location.href = '/student.html';
+                            break;
+                        case 'employee':
+                            window.location.href = '/employee.html';
+                            break;
+                        default:
+                            alert('Unknown user role');
+                    }
+                } catch (error) {
+                    console.error('Login error:', error);
+                    alert('Login failed. Please try again.');
+                }
+            } else {
+                // Registration flow
+                try {
+                    const formData = {
+                        firstName: document.getElementById('firstName').value,
+                        lastName: document.getElementById('lastName').value,
+                        email: document.getElementById('email').value,
+                        password: document.getElementById('password').value,
+                        role: document.getElementById('role').value,
+                        organizationId: parseInt(document.getElementById('organization').value)
+                    };
+
+                    if (!formData.firstName || !formData.lastName || !formData.email || 
+                        !formData.password || !formData.role || !formData.organizationId) {
+                        alert('Please fill in all fields');
+                        return;
+                    }
+
+                    const response = await fetch('/api/auth/register', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(formData),
+                    });
+
+                    const data = await response.json();
+
+                    if (!data.success) {
+                        alert(data.error || 'Registration failed');
+                        return;
+                    }
+
+                    alert('Registration successful! Please login.');
+                    isLogin = true;
+                    updateAuthModal();
+                } catch (error) {
+                    console.error('Registration error:', error);
+                    alert('Registration failed. Please try again.');
+                }
+            }
+        });
+
+        // Event listener for organization selection
+        document.getElementById('organization').addEventListener('change', (e) => {
+            const org = organizations.find(o => o.id === parseInt(e.target.value));
+            if (org) {
+                updateRoleSelect(org.type);
+            }
+        });
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    window.scrollTo({
+                        top: target.offsetTop,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        // Handle contact form submission (placeholder)
+        const contactForm = document.querySelector('#contact form');
+        if (contactForm) {
+            contactForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                alert('Thank you for your message! Our team will contact you soon.');
+                contactForm.reset();
+            });
+        }
+
+        // Initialize app
+        loadOrganizations();
+    </script>
+</body>
+</html>
